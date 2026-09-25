@@ -9,6 +9,7 @@
 
   const urlPart = (C.URL_PARTICIPANTES || location.href.replace(/[?#].*$/, '').replace(/presentador\.html$/, '')).trim();
   const urlCorta = urlPart.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const urlHtml = esc(urlCorta).replace(/\//g, '/<wbr>');   // corta la dirección después de cada barra
 
   let vivo = null, resumen = { participantes: 0, respuestas: {}, preguntas: 0 };
   let pintado = null;          // actividad actualmente dibujada
@@ -25,7 +26,7 @@
       const svg = el.querySelector('svg'); if (svg) { svg.style.width = '100%'; svg.style.height = '100%'; svg.querySelectorAll('path').forEach(p => p.setAttribute('fill', '#131A35')); }
     } catch (e) { el.innerHTML = `<p style="font-size:.8rem">${esc(urlCorta)}</p>`; }
   }
-  const esquinaQR = () => `<div class="qr-esquina"><div class="qr" id="qr-mini"></div><p>Participa en<b>${esc(urlCorta)}</b></p></div>`;
+  const esquinaQR = () => `<div class="qr-esquina"><div class="qr" id="qr-mini"></div><p>Participa en<b>${urlHtml}</b></p></div>`;
 
   // ------------------------------------------------------------ clave del facilitador
   let clave = sessionStorage.getItem('iae_clave') || '';
@@ -80,7 +81,7 @@
           <p class="e-parte">${esc(C.SUBTITULO || '')}</p>
           <h1>${esc(C.TITULO)}</h1>
           <p class="e-sub" style="margin:0">Entra desde tu celular para participar en las actividades de hoy.</p>
-          <span class="url">${esc(urlCorta)}</span>
+          <span class="url">${urlHtml}</span>
           <p class="contador"><b id="cont">${resumen.participantes || 0}</b>personas conectadas</p>
         </div><div class="qr" id="qr-grande"></div></div>`,
       montar: () => qr($('#qr-grande')),
@@ -222,7 +223,7 @@
           <p class="e-parte">${esc(C.SUBTITULO || '')}</p>
           <h1>Gracias</h1>
           <p class="e-sub">Descarga tu ficha desde el celular: incluye la oportunidad que priorizaste, tu autoevaluación y tu siguiente paso.</p>
-          <span class="url">${esc(urlCorta)}</span>
+          <span class="url">${urlHtml}</span>
         </div><div class="qr" id="qr-grande"></div></div>`,
       montar: () => qr($('#qr-grande')),
       datos: null
