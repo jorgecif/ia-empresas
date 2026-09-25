@@ -9,7 +9,8 @@
 
   const urlPart = (C.URL_PARTICIPANTES || location.href.replace(/[?#].*$/, '').replace(/presentador\.html$/, '')).trim();
   const urlCorta = urlPart.replace(/^https?:\/\//, '').replace(/\/$/, '');
-  const urlHtml = esc(urlCorta).replace(/\//g, '/<wbr>');   // corta la dirección después de cada barra
+  // La dirección solo se corta después de una barra, nunca en un guion o a mitad de palabra.
+  const urlHtml = urlCorta.split('/').map((s, i, a) => `<span class="sin-corte">${esc(s)}${i < a.length - 1 ? '/' : ''}</span>`).join('<wbr>');
 
   let vivo = null, resumen = { participantes: 0, respuestas: {}, preguntas: 0 };
   let pintado = null;          // actividad actualmente dibujada
