@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Presentador · IA para empresas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/estilos.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='5' y='30' width='90' height='40' rx='20' fill='%23283486'/%3E%3C/svg%3E">
+</head>
+<body class="pr">
+  <aside class="riel" aria-label="Controles del facilitador">
+    <img src="assets/logo-uniandes-blanco.png" alt="Universidad de los Andes · Educación Continua">
+    <div>
+      <span class="modo" id="modo">Conectando</span>
+      <div class="dato" style="margin-top:.75rem"><span>Participantes</span><b id="n-part">0</b></div>
+    </div>
+    <div>
+      <h2>Actividad en pantalla</h2>
+      <ul class="riel-lista" id="riel-lista"></ul>
+    </div>
+    <div style="display:grid;gap:.5rem">
+      <button class="boton secundario pequeno" id="btn-pantalla" type="button">Pantalla completa</button>
+      <button class="boton secundario pequeno" id="btn-ejemplo" type="button" hidden>Cargar datos de ejemplo</button>
+      <button class="boton secundario pequeno" id="btn-reiniciar" type="button">Borrar respuestas</button>
+    </div>
+    <p class="atajos">
+      <kbd>←</kbd> <kbd>→</kbd> cambiar actividad<br>
+      <kbd>R</kbd> ocultar este panel<br>
+      <kbd>F</kbd> pantalla completa
+    </p>
+  </aside>
+
+  <main class="escena" id="escena" aria-live="polite"></main>
+
+  <dialog class="clave" id="dlg-clave">
+    <form method="dialog" id="form-clave">
+      <h2>Clave del facilitador</h2>
+      <p>Necesaria para cambiar la actividad en vivo o borrar respuestas.</p>
+      <label class="oculto-visual" for="in-clave">Clave</label>
+      <input type="password" id="in-clave" autocomplete="current-password" required>
+      <p id="err-clave" class="aviso error" hidden></p>
+      <div class="acciones">
+        <button class="boton secundario" value="cancelar" type="button" id="cancelar-clave">Cancelar</button>
+        <button class="boton" type="submit">Entrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/qrcode.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/datos.js"></script>
+  <script src="assets/almacen.js"></script>
+  <script src="assets/presentador.js"></script>
+</body>
+</html>

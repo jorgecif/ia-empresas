@@ -1,0 +1,4 @@
+# Nunca subir claves ni archivos locales
+*.local.*
+clave*.txt
+.env*

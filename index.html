@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#283486">
+  <title>Participa · IA para empresas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/estilos.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='5' y='30' width='90' height='40' rx='20' fill='%23DC348B'/%3E%3C/svg%3E">
+</head>
+<body class="p-cuerpo">
+  <header class="p-cabecera">
+    <img src="assets/logo-uniandes.png" alt="Universidad de los Andes · Facultad de Ciencias Sociales · Educación Continua">
+    <span id="estado" class="en-vivo" aria-live="polite">Conectando</span>
+  </header>
+
+  <main id="escenario" class="p-escenario" tabindex="-1"></main>
+
+  <nav class="p-pie" aria-label="Menú">
+    <button class="boton secundario" id="btn-actividades" type="button">Actividades</button>
+    <button class="boton azul" id="btn-preguntas" type="button">Preguntar</button>
+  </nav>
+
+  <div class="hoja-fondo" id="fondo"></div>
+
+  <section class="hoja" id="hoja-act" role="dialog" aria-modal="true" aria-labelledby="t-act" hidden>
+    <div class="hoja-cab">
+      <h2 id="t-act">Actividades de la sesión</h2>
+      <button class="cerrar" type="button" data-cerrar aria-label="Cerrar">×</button>
+    </div>
+    <ul class="lista-act" id="lista-act"></ul>
+  </section>
+
+  <section class="hoja" id="hoja-preg" role="dialog" aria-modal="true" aria-labelledby="t-preg" hidden>
+    <div class="hoja-cab">
+      <h2 id="t-preg">Preguntas para los facilitadores</h2>
+      <button class="cerrar" type="button" data-cerrar aria-label="Cerrar">×</button>
+    </div>
+    <div id="panel-preguntas"></div>
+  </section>
+
+  <div class="brindis" id="brindis" role="status" aria-live="polite"></div>
+  <div id="ficha" aria-hidden="true"></div>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/datos.js"></script>
+  <script src="assets/almacen.js"></script>
+  <script src="assets/participante.js"></script>
+</body>
+</html>
