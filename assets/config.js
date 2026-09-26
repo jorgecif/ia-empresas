@@ -12,7 +12,7 @@ window.CONFIG = {
   SUBTITULO: "Upgrade Sessions #2 · Universidad de los Andes",
 
   // Dirección que verán los participantes en el QR. Si la dejas vacía se calcula sola.
-  URL_PARTICIPANTES: "",
+  URL_PARTICIPANTES: "https://aiparaempresas.asiomas.pro/",
 
   // Cada cuántos milisegundos se consultan cambios.
   INTERVALO_ESTADO: 2500,
