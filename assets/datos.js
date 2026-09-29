@@ -48,15 +48,6 @@ window.DATOS = {
 
   matriz: {
     pregunta: 'Prioriza una oportunidad de tu organización',
-    preguntasClave: [
-      '¿Qué problema del negocio o de la misión resuelve y qué indicador va a mover?',
-      '¿Toca un proceso central o uno periférico?',
-      '¿Tenemos los datos necesarios y son confiables?',
-      '¿Quién la patrocina y quién la va a usar en el día a día?',
-      '¿Qué tiene que cambiar en roles y procesos para que se adopte?',
-      '¿Cuánto cuesta en total y cuál es la prueba más pequeña que nos diría si vale la pena escalar?',
-      '¿Qué riesgos legales, reputacionales u operativos introduce?'
-    ],
     criterios: [
       { id: 'central',   texto: '¿Toca un proceso central del negocio o de la misión?' },
       { id: 'indicador', texto: '¿Mueve un indicador que le importa a la dirección?' },

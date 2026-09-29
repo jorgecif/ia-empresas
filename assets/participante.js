@@ -150,7 +150,7 @@
   // Ejercicio de priorización ------------------------------------------------
   vistas.matriz = () => {
     const P = D.matriz;
-    const b = mis.matriz = mis.matriz || { paso: 1, oportunidad: '', respuestas: {}, criterios: {}, preparacion: null, publicada: false };
+    const b = mis.matriz = mis.matriz || { paso: 1, oportunidad: '', descripcion: '', criterios: {}, preparacion: null, publicada: false };
     const total = 4;
     const cabecera = `<p class="p-parte">Ejercicio aplicado</p><h1 class="p-titulo">${esc(P.pregunta)}</h1>
       <ol class="pasos-ej" aria-label="Paso ${Math.min(b.paso, 4)} de ${total}">${[1, 2, 3, 4].map(n => `<li class="${n < b.paso ? 'hecho' : n === b.paso ? 'actual' : ''}"></li>`).join('')}</ol>`;
@@ -158,19 +158,15 @@
 
     if (b.paso === 1) {
       escenario.innerHTML = cabecera + `
-        <label class="campo"><span>¿Qué oportunidad de IA vas a evaluar?</span>
+        <label class="campo"><span>Nombre de la iniciativa</span>
           <input type="text" id="oportunidad" maxlength="80" value="${esc(b.oportunidad)}" placeholder="Por ejemplo: alertas tempranas de deserción">
-          <small>Puede ser de tu organización o de un cliente.</small></label>
-        <p class="p-ayuda" style="margin-bottom:.75rem">Responde las preguntas clave que puedas. Se quedan en tu celular y salen en tu ficha.</p>
-        ${P.preguntasClave.map((q, i) => `<details class="acordeon ${b.respuestas[i] ? 'lleno' : ''}">
-          <summary><span class="num">${i + 1}</span><span>${esc(q)}</span></summary>
-          <textarea data-q="${i}" rows="3" maxlength="400" aria-label="${esc(q)}">${esc(b.respuestas[i] || '')}</textarea></details>`).join('')}
+          <small>Puede ser de tu organización o de un cliente. Es lo que aparecerá en la matriz del grupo.</small></label>
+        <label class="campo"><span>Descripción de la iniciativa</span>
+          <textarea id="descripcion" rows="4" maxlength="300" placeholder="Qué hace, para quién y qué problema resuelve">${esc(b.descripcion || '')}</textarea>
+          <small>Opcional. Se queda en tu celular y sale en tu ficha.</small></label>
         <div class="acciones"><button class="boton" id="sig" type="button" ${b.oportunidad.trim() ? '' : 'disabled'}>Siguiente: impacto</button></div>`;
       $('#oportunidad').oninput = e => { b.oportunidad = e.target.value; guardarMis(); $('#sig').disabled = !b.oportunidad.trim(); };
-      escenario.querySelectorAll('[data-q]').forEach(t => t.oninput = () => {
-        b.respuestas[t.dataset.q] = t.value; guardarMis();
-        t.closest('details').classList.toggle('lleno', !!t.value.trim());
-      });
+      $('#descripcion').oninput = e => { b.descripcion = e.target.value; guardarMis(); };
       $('#sig').onclick = () => ir(2);
     }
 
@@ -222,7 +218,7 @@
         <div class="acciones">
           <button class="boton" id="publicar" type="button">${b.publicada ? 'Actualizar en la matriz del grupo' : 'Publicar en la matriz del grupo'}</button>
           <button class="boton secundario" id="ficha-btn" type="button">Descargar mi ficha</button></div>
-        <p class="p-ayuda" style="margin-top:1rem">Solo se publica el nombre de la oportunidad y su ubicación. Tus respuestas a las preguntas clave se quedan en tu celular.</p>
+        <p class="p-ayuda" style="margin-top:1rem">Solo se publica el nombre de la iniciativa y su ubicación. La descripción se queda en tu celular.</p>
         <button class="enlace" id="editar" type="button">Editar mis respuestas</button>`;
       $('#publicar').onclick = async () => {
         try {
@@ -350,8 +346,8 @@
     if (b.oportunidad) {
       const r = calcular(b), Q = P.cuadrantes[r.cuadrante];
       html += `<h2>Oportunidad priorizada</h2><p><b>${esc(b.oportunidad)}</b></p>
+        ${(b.descripcion || '').trim() ? `<p>${esc(b.descripcion.trim())}</p>` : ''}
         <p>Impacto: ${r.impacto.toFixed(1)} de 5 · Preparación: ${r.preparacion.toFixed(1)} de 5 · Cuadrante: <b>${esc(Q.nombre)}</b>. ${esc(Q.consejo)}</p>
-        <h2>Preguntas clave</h2><ol>${P.preguntasClave.map((q, i) => `<li><b>${esc(q)}</b><br>${esc((b.respuestas || {})[i] || 'Sin responder')}</li>`).join('')}</ol>
         <h2>Criterios de impacto</h2><ul>${P.criterios.map(c => `<li>${esc(c.texto)} ${esc((P.valores.find(v => v.id === (b.criterios || {})[c.id]) || {}).texto || '—')}</li>`).join('')}</ul>`;
     }
     if (cap) html += `<h2>Autoevaluación de capacidades (promedio ${cap.promedio.toFixed(1)})</h2><ul>${D.capacidades.items.map(it => `<li>${esc(it.titulo)}: ${cap.calificaciones[it.id]} de 5</li>`).join('')}</ul>`;

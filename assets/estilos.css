@@ -137,12 +137,6 @@ textarea:focus, input:focus { outline: none; border-color: var(--azul); }
 .pasos-ej li { flex: 1; height: 6px; border-radius: var(--capsula); background: var(--niebla); }
 .pasos-ej li.hecho { background: var(--azul); }
 .pasos-ej li.actual { background: var(--magenta); }
-.acordeon { border: 2px solid var(--niebla); border-radius: 20px; margin-bottom: .6rem; }
-.acordeon summary { list-style: none; padding: .85rem 1rem; font-weight: 600; cursor: pointer; display: flex; gap: .75rem; align-items: baseline; line-height: 1.4; }
-.acordeon summary::-webkit-details-marker { display: none; }
-.acordeon summary .num { flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--rubor); color: var(--magenta); display: grid; place-items: center; font-size: .8rem; }
-.acordeon[open] summary .num, .acordeon.lleno summary .num { background: var(--magenta); color: var(--blanco); }
-.acordeon textarea { border: 0; border-top: 2px solid var(--niebla); border-radius: 0 0 18px 18px; min-height: 5rem; }
 
 .deslizador { margin: .5rem 0 1.5rem; }
 .deslizador input[type="range"] { width: 100%; accent-color: var(--azul); }

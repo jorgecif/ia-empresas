@@ -22,7 +22,7 @@ Son dos páginas:
 | Preguntas del público | En cualquier momento | Botón "Preguntar" y votos | Preguntas ordenadas por votos |
 | Gracias | 26 · Gracias | Botón para descargar su ficha | QR para volver a entrar |
 
-El ejercicio conecta las tres partes de la sesión: el impacto sale de los cinco criterios de la parte 1 y la preparación sale de la autoevaluación de la parte 2. Al final, cada participante puede descargar una ficha en PDF con su oportunidad, sus respuestas a las siete preguntas clave, su autoevaluación y su siguiente paso.
+El ejercicio conecta las tres partes de la sesión: el impacto sale de los cinco criterios de la parte 1 y la preparación sale de la autoevaluación de la parte 2. Al final, cada participante puede descargar una ficha en PDF con el nombre y la descripción de su iniciativa, su ubicación en la matriz, su autoevaluación y su siguiente paso.
 
 ## Dos modos de funcionamiento
 
@@ -90,14 +90,14 @@ Una sugerencia práctica: como la sesión es virtual, alterna entre compartir la
 
 ## Personalizar los textos
 
-Todos los textos de las actividades están en `assets/datos.js`: opciones de la encuesta, casos A y B, capacidades, criterios, preguntas clave y consejos de cada cuadrante. Al editarlos, cambian a la vez en los celulares y en la pantalla del presentador. El título y el subtítulo de la sesión están en `assets/config.js`.
+Todos los textos de las actividades están en `assets/datos.js`: opciones de la encuesta, casos A y B, capacidades, criterios y consejos de cada cuadrante. Al editarlos, cambian a la vez en los celulares y en la pantalla del presentador. El título y el subtítulo de la sesión están en `assets/config.js`.
 
 Los colores y la tipografía siguen la plantilla de la universidad y están al inicio de `assets/estilos.css`.
 
 ## Seguridad y privacidad
 
 - **No se piden nombres ni correos.** Cada celular recibe un identificador aleatorio que solo sirve para no contar dos veces la misma respuesta.
-- **Qué se publica en la pantalla:** los porcentajes, las razones de la votación A/B, el nombre de la oportunidad y su ubicación en la matriz, y los siguientes pasos. Las respuestas a las siete preguntas clave nunca salen del celular.
+- **Qué se publica en la pantalla:** los porcentajes, las razones de la votación A/B, el nombre de la oportunidad y su ubicación en la matriz, y los siguientes pasos. La descripción de la iniciativa nunca sale del celular.
 - **La clave del facilitador** se guarda cifrada en la base de datos y se necesita para cambiar la actividad, marcar preguntas y borrar respuestas.
 - **Las tablas no se pueden leer ni modificar directamente.** Todo pasa por funciones que validan los datos y limitan su tamaño.
 - Cualquier persona con el enlace puede responder. Para una sesión con inscripción previa es suficiente, pero no uses estas herramientas para recoger información sensible.
