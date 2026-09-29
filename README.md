@@ -16,8 +16,10 @@ Son dos páginas:
 | Sala de espera | Portada y agenda | Mensaje de bienvenida | Título, QR grande y número de personas conectadas |
 | Punto de partida | 3 · Encuesta | Cinco opciones | Barras con el porcentaje de cada etapa |
 | ¿Aislada o transformadora? | 12 · Votación A/B | Los dos casos y una razón opcional | Barra dividida A/B y las razones del grupo |
-| Prioriza tu oportunidad | 24 · Ejercicio | Cuatro pasos: iniciativa, impacto, autoevaluación de las seis capacidades y resultado en la matriz | Matriz 2×2 con las oportunidades de todo el grupo |
-| Preparación del grupo | 24 · Ejercicio | Sigue en el ejercicio | Promedio del grupo por capacidad y la más baja, con las autoevaluaciones del ejercicio |
+| Ejercicio · 1. Nombre de la iniciativa | 24 · Ejercicio | Nombre y descripción opcional de su iniciativa | Instrucciones y un ejemplo |
+| Ejercicio · 2. Impacto del negocio | 24 · Ejercicio | Los cinco criterios de la parte 1 (Sí, En parte, No) | Los cinco criterios |
+| Ejercicio · 3. Preparación de la organización | 24 · Ejercicio | Las seis capacidades de 1 a 5 y su promedio | Promedio del grupo por capacidad y la más baja, en vivo |
+| Ejercicio · 4. Resultados | 24 · Ejercicio | Su cuadrante, su punto en la matriz y el botón para publicarlo | Matriz 2×2 con las oportunidades de todo el grupo |
 | Tu siguiente paso | 25 · Cierre | Un compromiso para esta semana | Muro con los compromisos |
 | Preguntas del público | En cualquier momento | Botón "Preguntar" y votos | Preguntas ordenadas por votos |
 | Gracias | 26 · Gracias | Botón para descargar su ficha | QR para volver a entrar |
@@ -77,13 +79,13 @@ Si la dirección es larga, puedes crear un enlace corto (por ejemplo con bit.ly)
 | 5:50 p. m. | Sala de espera (compartir pantalla con el QR) | Ambos |
 | 6:02 p. m. | Punto de partida | Jorge |
 | 6:30 p. m. | ¿Aislada o transformadora? | Jorge |
-| 7:30 p. m. | Prioriza tu oportunidad | Jorge (Santiago lee el chat) |
+| 7:30 p. m. | Ejercicio, pasos 1 a 4 (un paso cada 3 a 5 minutos) | Jorge (Santiago lee el chat) |
 | 7:50 p. m. | Tu siguiente paso y preguntas | Ambos |
 | 8:00 p. m. | Gracias | Ambos |
 
 Atajos en el presentador: **→** y **←** cambian la actividad en vivo, **R** oculta el panel lateral para proyectar solo los resultados y **F** activa la pantalla completa.
 
-Cuando cambias la actividad, los celulares de los participantes cambian solos. Cada persona puede volver a una actividad anterior desde el botón "Actividades", por ejemplo para terminar el ejercicio. Lo que escriben en el ejercicio se guarda en su celular mientras avanzan, así que no se pierde si cambias de actividad.
+Cuando cambias la actividad, los celulares de los participantes cambian solos. Cada paso del ejercicio es una actividad propia: tú decides cuándo abrir el siguiente, y quien termina antes ve un aviso de que el siguiente paso aparecerá solo. Cada persona puede volver a un paso o actividad anterior desde el botón "Actividades", y quien llegue tarde a "Resultados" ve qué pasos le faltan. Lo que escriben en el ejercicio se guarda en su celular mientras avanzan, así que no se pierde si cambias de actividad.
 
 Una sugerencia práctica: como la sesión es virtual, alterna entre compartir la presentación y compartir la pestaña del presentador. También puedes pegar en el chat el enlace de participación al inicio de cada actividad.
 

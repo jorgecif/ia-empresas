@@ -6,6 +6,9 @@
   const nombreDe = id => (D.actividades.find(a => a.id === id) || {}).nombre || id;
   const parteDe = id => (D.actividades.find(a => a.id === id) || {}).parte || '';
   const coma = n => n.toFixed(1).replace('.', ',');
+  const PASOS = D.actividades.filter(a => a.ejercicio).sort((a, b) => a.ejercicio - b.ejercicio);
+  const pasosEj = n => `<ol class="ej-pasos">${PASOS.map(p => `<li class="${p.ejercicio < n ? 'hecho' : p.ejercicio === n ? 'actual' : ''}">
+    <span>${p.ejercicio}</span>${esc(p.nombre)}</li>`).join('')}</ol>`;
 
   const urlPart = (C.URL_PARTICIPANTES || location.href.replace(/[?#].*$/, '').replace(/presentador\.html$/, '')).trim();
   const urlCorta = urlPart.replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -122,8 +125,28 @@
       }
     },
 
+    // Ejercicio: pasos 1 y 2 muestran las instrucciones; el 3 y el 4, los resultados del grupo en vivo.
+    iniciativa: {
+      marco: () => encabezado('iniciativa', 'Nombre de la iniciativa', 'Piensa en una oportunidad concreta de IA para tu organización o la de un cliente.') + `<div class="e-cuerpo">
+          ${pasosEj(1)}
+          <div class="ej-campos">
+            <div><h3>Nombre</h3><p>Corto y concreto. Es lo que aparecerá en la matriz del grupo.</p></div>
+            <div><h3>Descripción <small>opcional</small></h3><p>Qué hace, para quién y qué problema resuelve. Se queda en tu celular.</p></div>
+          </div>
+          <p class="ej-nota">Por ejemplo: <b>Alertas tempranas de deserción</b>. Un modelo que identifica a los estudiantes en riesgo para que consejería los contacte a tiempo.</p></div>`,
+      datos: null
+    },
+
+    impacto: {
+      marco: () => encabezado('impacto', 'Impacto del negocio', 'Evalúa tu iniciativa con los cinco criterios de la parte 1.') + `<div class="e-cuerpo">
+          ${pasosEj(2)}
+          <ol class="ej-lista">${D.matriz.criterios.map((c, i) => `<li><b>${i + 1}</b>${esc(c.texto)}</li>`).join('')}</ol>
+          <p class="ej-nota">Responde en tu celular <b>Sí</b>, <b>En parte</b> o <b>No</b>. Con eso se calcula el impacto, de 1 a 5.</p></div>`,
+      datos: null
+    },
+
     capacidades: {
-      marco: () => encabezado('capacidades', 'Así de preparado está el grupo') + `<div class="e-cuerpo"><div class="cap">
+      marco: () => encabezado('capacidades', 'Preparación de la organización') + `<div class="e-cuerpo"><div class="cap">
           <div class="cap-total" id="total"></div>
           <div><div class="pistas" id="pistas"></div>
           <div class="pt-marcas" style="margin-top:.6rem"><span></span><div><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div><span></span></div></div>

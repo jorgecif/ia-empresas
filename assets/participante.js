@@ -3,11 +3,10 @@
   const pid = U.idParticipante();
   const $ = s => document.querySelector(s);
   const escenario = $('#escenario');
-  const ACTS = D.actividades.filter(a => ['pulso', 'ab', 'matriz', 'paso'].includes(a.id));
-  const nombreDe = id => (D.actividades.find(a => a.id === id) || {}).nombre || id;
-  // Escenas del presentador que en el celular muestran otra actividad: los resultados de capacidades salen del ejercicio.
-  const PANTALLA = { capacidades: 'matriz' };
-  const pantallaDe = act => PANTALLA[act] || act;
+  const ACTS = D.actividades.filter(a => a.ejercicio || ['pulso', 'ab', 'paso'].includes(a.id));
+  const PASOS = D.actividades.filter(a => a.ejercicio).sort((a, b) => a.ejercicio - b.ejercicio);
+  const actDe = id => D.actividades.find(a => a.id === id) || {};
+  const etiqueta = id => { const a = actDe(id); return a.ejercicio ? `Paso ${a.ejercicio} · ${a.nombre}` : (a.nombre || id); };
 
   let vivo = null;          // actividad en vivo según los facilitadores
   let vista = null;         // actividad que se muestra en este celular
@@ -49,7 +48,8 @@
       <p class="p-parte">${esc(C.SUBTITULO || '')}</p>
       <h1 class="p-titulo">Ya estás dentro</h1>
       <p class="p-ayuda">Cuando los facilitadores abran una actividad, aparecerá aquí sola. No necesitas recargar la página.</p>
-      <ol class="espera-lista">${ACTS.map((a, i) => `<li><span>${i + 1}</span>${esc(a.nombre)}</li>`).join('')}</ol>`;
+      <ol class="espera-lista">${[...new Set(ACTS.map(a => a.ejercicio ? 'Prioriza tu oportunidad' : a.nombre))]
+        .map((t, i) => `<li><span>${i + 1}</span>${esc(t)}</li>`).join('')}</ol>`;
   };
 
   vistas.pulso = () => {
@@ -130,103 +130,142 @@
   }
 
   // Ejercicio de priorización ------------------------------------------------
-  vistas.matriz = () => {
-    const P = D.matriz;
-    const b = mis.matriz = mis.matriz || { paso: 1, oportunidad: '', descripcion: '', criterios: {}, preparacion: null, publicada: false };
-    const total = 4;
-    const cabecera = `<p class="p-parte">Ejercicio aplicado</p><h1 class="p-titulo">${esc(P.pregunta)}</h1>
-      <ol class="pasos-ej" aria-label="Paso ${Math.min(b.paso, 4)} de ${total}">${[1, 2, 3, 4].map(n => `<li class="${n < b.paso ? 'hecho' : n === b.paso ? 'actual' : ''}"></li>`).join('')}</ol>`;
-    const ir = n => { b.paso = n; guardarMis(); vistas.matriz(); escenario.focus(); window.scrollTo({ top: 0 }); };
+  // Cada paso es una actividad propia: los facilitadores lo abren desde el presentador.
+  // Lo que escribe la persona se guarda en este celular a medida que avanza.
+  function ejercicio() {
+    const b = mis.matriz = mis.matriz || { oportunidad: '', descripcion: '', criterios: {}, publicada: false };
+    b.oportunidad = b.oportunidad || ''; b.criterios = b.criterios || {};
+    return b;
+  }
+  const impactoCompleto = b => D.matriz.criterios.every(c => (b.criterios || {})[c.id] !== undefined);
+  const coma = n => n.toFixed(1).replace('.', ',');
 
-    if (b.paso === 1) {
-      escenario.innerHTML = cabecera + `
-        <label class="campo"><span>Nombre de la iniciativa</span>
-          <input type="text" id="oportunidad" maxlength="80" value="${esc(b.oportunidad)}" placeholder="Por ejemplo: alertas tempranas de deserción">
-          <small>Puede ser de tu organización o de un cliente. Es lo que aparecerá en la matriz del grupo.</small></label>
-        <label class="campo"><span>Descripción de la iniciativa</span>
-          <textarea id="descripcion" rows="4" maxlength="300" placeholder="Qué hace, para quién y qué problema resuelve">${esc(b.descripcion || '')}</textarea>
-          <small>Opcional. Se queda en tu celular y sale en tu ficha.</small></label>
-        <div class="acciones"><button class="boton" id="sig" type="button" ${b.oportunidad.trim() ? '' : 'disabled'}>Siguiente: impacto</button></div>`;
-      $('#oportunidad').oninput = e => { b.oportunidad = e.target.value; guardarMis(); $('#sig').disabled = !b.oportunidad.trim(); };
-      $('#descripcion').oninput = e => { b.descripcion = e.target.value; guardarMis(); };
-      $('#sig').onclick = () => ir(2);
-    }
+  const cabeceraEj = n => `<p class="p-parte">Ejercicio · Paso ${n} de 4</p>
+    <h1 class="p-titulo">${esc(PASOS[n - 1].nombre)}</h1>
+    <ol class="pasos-ej" aria-hidden="true">${PASOS.map((p, i) => `<li class="${i + 1 < n ? 'hecho' : i + 1 === n ? 'actual' : ''}"></li>`).join('')}</ol>`;
 
-    else if (b.paso === 2) {
-      const listo = () => P.criterios.every(c => b.criterios[c.id] !== undefined);
-      escenario.innerHTML = cabecera + `
-        <p class="p-ayuda"><b>${esc(b.oportunidad)}</b>: evalúa su impacto con los cinco criterios de la parte 1.</p>
-        ${P.criterios.map(c => `<div class="criterio" role="group" aria-labelledby="k-${c.id}"><p id="k-${c.id}">${esc(c.texto)}</p>
-          <div class="trio">${P.valores.map(v => `<button type="button" data-c="${c.id}" data-v="${v.id}" aria-pressed="${b.criterios[c.id] === v.id}">${v.texto}</button>`).join('')}</div></div>`).join('')}
-        <div class="acciones"><button class="boton secundario" id="ant" type="button">Atrás</button>
-          <button class="boton" id="sig" type="button" ${listo() ? '' : 'disabled'}>Siguiente: preparación</button></div>`;
-      escenario.querySelectorAll('[data-c]').forEach(x => x.onclick = () => {
-        b.criterios[x.dataset.c] = +x.dataset.v; guardarMis();
-        escenario.querySelectorAll(`[data-c="${x.dataset.c}"]`).forEach(y => y.setAttribute('aria-pressed', y === x));
-        $('#sig').disabled = !listo();
-      });
-      $('#ant').onclick = () => ir(1); $('#sig').onclick = () => ir(3);
-    }
+  // Aviso al terminar un paso: el siguiente lo abren los facilitadores.
+  function marcarListo(ok, texto) {
+    const el = $('#listo'); if (!el) return;
+    marcarListo.ultimo = [ok, texto];
+    el.hidden = !ok;
+    if (!ok) return;
+    const otraEnVivo = vivo && vivo !== 'espera' && vivo !== vista;
+    el.innerHTML = `<b>Listo.</b> ${texto || ''} ${otraEnVivo
+      ? '<button type="button" class="enlace" id="ir-vivo">Ir a la actividad en vivo</button>'
+      : 'Cuando abramos el siguiente paso, aparecerá aquí.'}`;
+    const ir = $('#ir-vivo'); if (ir) ir.onclick = () => { mostrar(vivo); window.scrollTo({ top: 0 }); };
+  }
+  function conectarPasos() {
+    escenario.querySelectorAll('[data-ir-paso]').forEach(x => x.onclick = () => { mostrar(x.dataset.irPaso); window.scrollTo({ top: 0 }); });
+  }
 
-    else if (b.paso === 3) {
-      const K = D.capacidades;
-      if (!b.calificaciones) b.calificaciones = Object.assign({}, (mis.capacidades || {}).calificaciones || {});
-      const cal = b.calificaciones;
-      escenario.innerHTML = cabecera + `
-        <p class="p-ayuda"><b>${esc(K.pregunta)}</b> ${esc(K.ayuda)} El promedio es el eje de preparación de la matriz.</p>
-        ${K.items.map(it => `<div class="escala-item" role="group" aria-labelledby="c-${it.id}">
-          <h3 id="c-${it.id}">${esc(it.titulo)}</h3><p>${esc(it.desc)}</p>
-          <div class="escala">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-it="${it.id}" data-v="${n}" aria-pressed="${cal[it.id] === n}" aria-label="${n}: ${esc(K.escala[n - 1])}">${n}</button>`).join('')}</div>
-          <div class="escala-extremos"><span>${esc(K.escala[0])}</span><span>${esc(K.escala[4])}</span></div></div>`).join('')}
-        <div id="mi-resultado" aria-live="polite"></div>
-        <p class="p-ayuda" style="margin-top:1rem">Tus calificaciones se suman, sin tu nombre, al promedio del grupo.</p>
-        <div class="acciones"><button class="boton secundario" id="ant" type="button">Atrás</button>
-          <button class="boton" id="sig" type="button" disabled>Ver dónde queda</button></div>`;
-      const actualizar = () => {
-        const prom = promedioCap(cal);
-        $('#mi-resultado').innerHTML = prom != null ? miResultado({ calificaciones: cal, promedio: prom }) : '';
-        $('#sig').disabled = prom == null;
-      };
-      escenario.querySelectorAll('[data-it]').forEach(x => x.onclick = () => {
-        cal[x.dataset.it] = +x.dataset.v; guardarMis();
-        escenario.querySelectorAll(`[data-it="${x.dataset.it}"]`).forEach(y => y.setAttribute('aria-pressed', y === x));
-        actualizar();
-      });
+  vistas.iniciativa = () => {
+    const b = ejercicio();
+    escenario.innerHTML = cabeceraEj(1) + `
+      <p class="p-ayuda">Piensa en una oportunidad concreta de IA para tu organización o la de un cliente.</p>
+      <label class="campo"><span>Nombre de la iniciativa</span>
+        <input type="text" id="oportunidad" maxlength="80" value="${esc(b.oportunidad)}" placeholder="Por ejemplo: alertas tempranas de deserción">
+        <small>Es lo que aparecerá en la matriz del grupo.</small></label>
+      <label class="campo"><span>Descripción de la iniciativa</span>
+        <textarea id="descripcion" rows="4" maxlength="300" placeholder="Qué hace, para quién y qué problema resuelve">${esc(b.descripcion || '')}</textarea>
+        <small>Opcional. Se queda en tu celular y sale en tu ficha.</small></label>
+      <p class="aviso" id="listo" aria-live="polite" hidden></p>`;
+    const marcar = () => marcarListo(!!b.oportunidad.trim());
+    $('#oportunidad').oninput = e => { b.oportunidad = e.target.value; guardarMis(); marcar(); };
+    $('#descripcion').oninput = e => { b.descripcion = e.target.value; guardarMis(); };
+    marcar();
+  };
+
+  vistas.impacto = () => {
+    const P = D.matriz, b = ejercicio();
+    escenario.innerHTML = cabeceraEj(2) + `
+      <p class="p-ayuda">${b.oportunidad.trim() ? `<b>${esc(b.oportunidad)}</b>: evalúa` : 'Evalúa'} su impacto con los cinco criterios de la parte 1.</p>
+      ${b.oportunidad.trim() ? '' : '<p class="aviso">Aún no has escrito el nombre de tu iniciativa. <button type="button" class="enlace" data-ir-paso="iniciativa">Ir al paso 1</button></p>'}
+      ${P.criterios.map(c => `<div class="criterio" role="group" aria-labelledby="k-${c.id}"><p id="k-${c.id}">${esc(c.texto)}</p>
+        <div class="trio">${P.valores.map(v => `<button type="button" data-c="${c.id}" data-v="${v.id}" aria-pressed="${b.criterios[c.id] === v.id}">${v.texto}</button>`).join('')}</div></div>`).join('')}
+      <p class="aviso" id="listo" aria-live="polite" hidden></p>`;
+    const marcar = () => marcarListo(impactoCompleto(b), impactoCompleto(b) ? `Impacto: <b>${coma(calcular(b).impacto)}</b> de 5.` : '');
+    escenario.querySelectorAll('[data-c]').forEach(x => x.onclick = () => {
+      b.criterios[x.dataset.c] = +x.dataset.v; guardarMis();
+      escenario.querySelectorAll(`[data-c="${x.dataset.c}"]`).forEach(y => y.setAttribute('aria-pressed', y === x));
+      marcar();
+    });
+    conectarPasos(); marcar();
+  };
+
+  let temporizadorCap = null;
+  vistas.capacidades = () => {
+    const K = D.capacidades, b = ejercicio();
+    if (!b.calificaciones) b.calificaciones = Object.assign({}, (mis.capacidades || {}).calificaciones || {});
+    const cal = b.calificaciones;
+    escenario.innerHTML = cabeceraEj(3) + `
+      <p class="p-ayuda"><b>${esc(K.pregunta)}</b> ${esc(K.ayuda)} El promedio es el eje de preparación de la matriz.</p>
+      ${K.items.map(it => `<div class="escala-item" role="group" aria-labelledby="c-${it.id}">
+        <h3 id="c-${it.id}">${esc(it.titulo)}</h3><p>${esc(it.desc)}</p>
+        <div class="escala">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-it="${it.id}" data-v="${n}" aria-pressed="${cal[it.id] === n}" aria-label="${n}: ${esc(K.escala[n - 1])}">${n}</button>`).join('')}</div>
+        <div class="escala-extremos"><span>${esc(K.escala[0])}</span><span>${esc(K.escala[4])}</span></div></div>`).join('')}
+      <div id="mi-resultado" aria-live="polite"></div>
+      <p class="p-ayuda" style="margin-top:1rem">Tus calificaciones se suman, sin tu nombre, al promedio del grupo.</p>
+      <p class="aviso" id="listo" aria-live="polite" hidden></p>`;
+    const actualizar = () => {
+      const prom = promedioCap(cal);
+      $('#mi-resultado').innerHTML = prom != null ? miResultado({ calificaciones: cal, promedio: prom }) : '';
+      marcarListo(prom != null);
+    };
+    escenario.querySelectorAll('[data-it]').forEach(x => x.onclick = () => {
+      cal[x.dataset.it] = +x.dataset.v; guardarMis();
+      escenario.querySelectorAll(`[data-it="${x.dataset.it}"]`).forEach(y => y.setAttribute('aria-pressed', y === x));
       actualizar();
-      $('#ant').onclick = () => ir(2);
-      $('#sig').onclick = async () => { $('#sig').disabled = true; await enviarCapacidades(b); ir(4); };
-    }
+      // En cuanto están las seis, se envían (y se reenvían si cambia alguna) para el promedio del grupo.
+      clearTimeout(temporizadorCap);
+      if (promedioCap(cal) != null) temporizadorCap = setTimeout(() => enviarCapacidades(b), 700);
+    });
+    actualizar();
+  };
 
-    else {
-      const r = calcular(b), Q = P.cuadrantes[r.cuadrante];
-      const x = ((r.preparacion - 1) / 4) * 100, y = ((r.impacto - 1) / 4) * 100;
-      escenario.innerHTML = cabecera + `
-        <div class="veredicto ${r.cuadrante}"><h3>${esc(Q.nombre)}</h3><p>${esc(Q.consejo)}</p>
-          <div class="cifras"><span><b>${r.impacto.toFixed(1).replace('.', ',')}</b>impacto</span><span><b>${r.preparacion.toFixed(1).replace('.', ',')}</b>preparación</span></div></div>
-        <p class="eje-y">Impacto en el negocio o la misión ↑</p>
-        <div class="mini-matriz" aria-label="Tu oportunidad queda en el cuadrante ${esc(Q.nombre)}">
-          <div class="q capacidades">Construir capacidades</div><div class="q priorizar">Priorizar</div>
-          <div class="q descartar">Descartar o posponer</div><div class="q rapidas">Victoria rápida</div>
-          <span class="punto" style="left:${x}%;bottom:${y}%"></span></div>
-        <p class="eje-x">Preparación de la organización →</p>
-        <div class="acciones">
-          <button class="boton" id="publicar" type="button">${b.publicada ? 'Actualizar en la matriz del grupo' : 'Publicar en la matriz del grupo'}</button>
-          <button class="boton secundario" id="ficha-btn" type="button">Descargar mi ficha</button></div>
-        <p class="p-ayuda" style="margin-top:1rem">En la matriz del grupo solo aparece el nombre de la iniciativa y su ubicación. La descripción se queda en tu celular.</p>
-        <button class="enlace" id="editar" type="button">Editar mis respuestas</button>`;
-      $('#publicar').onclick = async () => {
-        try {
-          await A.responder(pid, 'matriz', { oportunidad: b.oportunidad.trim().slice(0, 80), impacto: r.impacto, preparacion: r.preparacion, cuadrante: r.cuadrante });
-          b.publicada = true; guardarMis(); brindis('Publicada en la matriz del grupo'); vistas.matriz();
-          enviarCapacidades(b);   // por si el envío del paso 3 falló
-        } catch (e) { fallo(e); }
-      };
-      $('#ficha-btn').onclick = imprimirFicha;
-      $('#editar').onclick = () => ir(1);
+  vistas.matriz = () => {
+    const P = D.matriz, b = ejercicio();
+    const faltan = [];
+    if (!b.oportunidad.trim()) faltan.push('iniciativa');
+    if (!impactoCompleto(b)) faltan.push('impacto');
+    if (!autoevaluacion(b)) faltan.push('capacidades');
+    if (faltan.length) {
+      escenario.innerHTML = cabeceraEj(4) + `
+        <p class="p-ayuda">Para ver dónde queda tu iniciativa, completa primero:</p>
+        <ul class="lista-act">${faltan.map(id => `<li><button type="button" data-ir-paso="${id}"><span>${esc(etiqueta(id))}</span><span aria-hidden="true">→</span></button></li>`).join('')}</ul>`;
+      conectarPasos();
+      return;
     }
+    const r = calcular(b), Q = P.cuadrantes[r.cuadrante];
+    const x = ((r.preparacion - 1) / 4) * 100, y = ((r.impacto - 1) / 4) * 100;
+    escenario.innerHTML = cabeceraEj(4) + `
+      <p class="p-ayuda"><b>${esc(b.oportunidad)}</b></p>
+      <div class="veredicto ${r.cuadrante}"><h3>${esc(Q.nombre)}</h3><p>${esc(Q.consejo)}</p>
+        <div class="cifras"><span><b>${coma(r.impacto)}</b>impacto</span><span><b>${coma(r.preparacion)}</b>preparación</span></div></div>
+      <p class="eje-y">Impacto en el negocio o la misión ↑</p>
+      <div class="mini-matriz" aria-label="Tu oportunidad queda en el cuadrante ${esc(Q.nombre)}">
+        <div class="q capacidades">Construir capacidades</div><div class="q priorizar">Priorizar</div>
+        <div class="q descartar">Descartar o posponer</div><div class="q rapidas">Victoria rápida</div>
+        <span class="punto" style="left:${x}%;bottom:${y}%"></span></div>
+      <p class="eje-x">Preparación de la organización →</p>
+      <div class="acciones">
+        <button class="boton" id="publicar" type="button">${b.publicada ? 'Actualizar en la matriz del grupo' : 'Publicar en la matriz del grupo'}</button>
+        <button class="boton secundario" id="ficha-btn" type="button">Descargar mi ficha</button></div>
+      <p class="p-ayuda" style="margin-top:1rem">En la matriz del grupo solo aparece el nombre de la iniciativa y su ubicación. La descripción se queda en tu celular.</p>
+      <button class="enlace" type="button" data-ir-paso="iniciativa">Editar mis respuestas</button>`;
+    $('#publicar').onclick = async () => {
+      try {
+        await A.responder(pid, 'matriz', { oportunidad: b.oportunidad.trim().slice(0, 80), impacto: r.impacto, preparacion: r.preparacion, cuadrante: r.cuadrante });
+        b.publicada = true; guardarMis(); brindis('Publicada en la matriz del grupo'); vistas.matriz();
+        enviarCapacidades(b);   // por si el envío del paso 3 falló
+      } catch (e) { fallo(e); }
+    };
+    $('#ficha-btn').onclick = imprimirFicha;
+    conectarPasos();
   };
   function calcular(b) {
-    const suma = D.matriz.criterios.reduce((s, c) => s + (b.criterios[c.id] || 0), 0);  // 0 a 10
+    const suma = D.matriz.criterios.reduce((s, c) => s + ((b.criterios || {})[c.id] || 0), 0);  // 0 a 10
     const impacto = +(1 + suma * 0.4).toFixed(2);
     const a = autoevaluacion(b);
     const preparacion = +((a && a.promedio) || b.preparacion || 3).toFixed(2);
@@ -324,11 +363,19 @@
   document.querySelectorAll('[data-cerrar]').forEach(b => b.onclick = cerrarHojas);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarHojas(); });
 
+  function hechaActividad(id) {
+    const b = mis.matriz || {};
+    if (id === 'iniciativa') return !!(b.oportunidad || '').trim();
+    if (id === 'impacto') return impactoCompleto(b);
+    if (id === 'capacidades') return !!autoevaluacion(b);
+    if (id === 'matriz') return !!b.publicada;
+    return !!mis[id];
+  }
   $('#btn-actividades').onclick = () => {
     $('#lista-act').innerHTML = ACTS.map(a => {
-      const hecho = a.id === 'matriz' ? mis.matriz && mis.matriz.publicada : !!mis[a.id];
-      return `<li><button type="button" data-ir="${a.id}"><span>${esc(a.nombre)}</span>
-        ${a.id === pantallaDe(vivo) ? '<span class="vivo">En vivo</span>' : hecho ? '<span class="listo">Respondida</span>' : ''}</button></li>`;
+      const hecho = hechaActividad(a.id);
+      return `<li><button type="button" data-ir="${a.id}"><span>${esc(etiqueta(a.id))}</span>
+        ${a.id === vivo ? '<span class="vivo">En vivo</span>' : hecho ? '<span class="listo">Respondida</span>' : ''}</button></li>`;
     }).join('');
     $('#lista-act').querySelectorAll('[data-ir]').forEach(b => b.onclick = () => { cerrarHojas(); mostrar(b.dataset.ir); window.scrollTo({ top: 0 }); });
     abrirHoja('#hoja-act');
@@ -362,11 +409,10 @@
       indicador.textContent = A.modo === 'demo' ? 'Modo demo' : 'En vivo';
       if (e.actividad !== vivo) {
         const anterior = vivo; vivo = e.actividad;
-        const destino = pantallaDe(vivo);
-        if (destino !== vista) {   // si ya está en esa pantalla (p. ej., en el ejercicio), no se interrumpe
-          if (anterior !== null && vivo !== 'espera') brindis('Nueva actividad: ' + nombreDe(destino));
-          mostrar(destino);
-        }
+        if (vivo !== vista) {   // si la persona ya llegó a esa actividad por su cuenta, no se interrumpe
+          if (anterior !== null && vivo !== 'espera') brindis('Nueva actividad: ' + etiqueta(vivo));
+          mostrar(vivo);
+        } else if (marcarListo.ultimo) marcarListo(...marcarListo.ultimo);   // actualiza el aviso del paso
       }
     } catch (err) {
       indicador.className = 'en-vivo error'; indicador.textContent = 'Sin conexión';

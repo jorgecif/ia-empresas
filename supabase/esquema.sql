@@ -276,10 +276,11 @@ security definer
 set search_path = public, extensions
 as $$
 begin
-  perform public._exigir_clave(p_clave);
-  if p_actividad not in ('espera','pulso','ab','capacidades','matriz','paso','preguntas','fin') then
+  -- Las actividades las define assets/datos.js; aquí solo se valida el formato del identificador.
+  if coalesce(p_actividad, '') !~ '^[a-z_]{2,30}$' then
     raise exception 'Actividad no válida: %', p_actividad;
   end if;
+  perform public._exigir_clave(p_clave);
   update public.estado_sesion set actividad = p_actividad, actualizado = now() where id = 1;
 end;
 $$;

@@ -4,9 +4,11 @@ window.DATOS = {
     { id: 'espera',      nombre: 'Sala de espera',        corto: 'Espera' },
     { id: 'pulso',       nombre: 'Punto de partida',      corto: 'Encuesta',     parte: 'Apertura' },
     { id: 'ab',          nombre: '¿Aislada o transformadora?', corto: 'Votación A/B', parte: 'Parte 1' },
-    { id: 'matriz',      nombre: 'Prioriza tu oportunidad', corto: 'Ejercicio',  parte: 'Parte 3' },
-    // Solo en el presentador: promedio de la autoevaluación que se hace dentro del ejercicio.
-    { id: 'capacidades', nombre: 'Preparación del grupo', corto: 'Preparación',  parte: 'Parte 3' },
+    // Ejercicio "Prioriza tu oportunidad": cada paso es una actividad que los facilitadores abren desde el presentador.
+    { id: 'iniciativa',  nombre: 'Nombre de la iniciativa',        corto: '1. Nombre de la iniciativa',        parte: 'Ejercicio · Paso 1 de 4', ejercicio: 1 },
+    { id: 'impacto',     nombre: 'Impacto del negocio',            corto: '2. Impacto del negocio',            parte: 'Ejercicio · Paso 2 de 4', ejercicio: 2 },
+    { id: 'capacidades', nombre: 'Preparación de la organización', corto: '3. Preparación de la organización', parte: 'Ejercicio · Paso 3 de 4', ejercicio: 3 },
+    { id: 'matriz',      nombre: 'Resultados',                     corto: '4. Resultados',                     parte: 'Ejercicio · Paso 4 de 4', ejercicio: 4 },
     { id: 'paso',        nombre: 'Tu siguiente paso',     corto: 'Siguiente paso', parte: 'Cierre' },
     { id: 'preguntas',   nombre: 'Preguntas del público', corto: 'Preguntas' },
     { id: 'fin',         nombre: 'Gracias',               corto: 'Cierre' }
