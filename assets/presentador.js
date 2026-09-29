@@ -262,7 +262,7 @@
     try {
       const [e, r] = await Promise.all([A.estado(), A.resumen()]);
       resumen = r || resumen;
-      $('#modo').textContent = A.modo === 'demo' ? '● Modo demo (sin base de datos)' : '● En vivo con Supabase';
+      $('#modo').textContent = A.modo === 'demo' ? '● Modo demo (sin base de datos)' : '● En vivo';
       if (e.actividad !== vivo) vivo = e.actividad;
       pintarRiel();
       if (pintado !== vivo || forzar === 'redibujar') dibujar(vivo);
