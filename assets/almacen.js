@@ -71,7 +71,7 @@
       const D = window.DATOS, E = D.ejemplo, d = vacio();
       const azar = (a, b) => a + Math.random() * (b - a);
       const elegir = arr => arr[Math.floor(Math.random() * arr.length)];
-      const pesosPulso = ['explorando', 'pilotos', 'pilotos', 'pilotos', 'produccion', 'produccion', 'escalando'];
+      const pesosPulso = ['explorando', 'chateando', 'chateando', 'chateando', 'pilotos', 'pilotos', 'produccion', 'escalando'];
       for (let i = 0; i < 22; i++) {
         const pid = 'demo-' + i; d.participantes.push(pid);
         const t = Date.now() - (22 - i) * 60000;

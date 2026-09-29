@@ -15,9 +15,10 @@ window.DATOS = {
     pregunta: '¿En qué punto está tu organización con la IA?',
     opciones: [
       { id: 'explorando', titulo: 'Explorando',    desc: 'Hablamos de IA, pero aún no hay iniciativas en marcha.' },
+      { id: 'chateando',  titulo: 'Chateando',     desc: 'Usamos chats para mejorar la productividad de cada persona.' },
       { id: 'pilotos',    titulo: 'Pilotos',       desc: 'Probamos herramientas o casos puntuales en algunas áreas.' },
       { id: 'produccion', titulo: 'En producción', desc: 'Al menos una solución de IA opera en un proceso real.' },
-      { id: 'escalando',  titulo: 'Escalando',     desc: 'La IA se extiende a varios procesos con metas de negocio.' }
+      { id: 'escalando',  titulo: 'Escalando',     desc: 'La IA se extiende a varios procesos con metas de negocio y alineación estratégica.' }
     ]
   },
 

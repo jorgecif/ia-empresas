@@ -14,7 +14,7 @@ Son dos páginas:
 | Actividad | Diapositiva | Qué ve el participante | Qué se proyecta |
 | --- | --- | --- | --- |
 | Sala de espera | Portada y agenda | Mensaje de bienvenida | Título, QR grande y número de personas conectadas |
-| Punto de partida | 3 · Encuesta | Cuatro opciones | Barras con el porcentaje de cada etapa |
+| Punto de partida | 3 · Encuesta | Cinco opciones | Barras con el porcentaje de cada etapa |
 | ¿Aislada o transformadora? | 12 · Votación A/B | Los dos casos y una razón opcional | Barra dividida A/B y las razones del grupo |
 | Autoevaluación | 19 · Autoevaluación | Seis capacidades de 1 a 5 y su promedio | Promedio del grupo por capacidad y la más baja |
 | Prioriza tu oportunidad | 24 · Ejercicio | Ejercicio guiado en cuatro pasos con resultado en la matriz | Matriz 2×2 con las oportunidades de todo el grupo |
