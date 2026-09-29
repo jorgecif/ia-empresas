@@ -3,8 +3,11 @@
   const pid = U.idParticipante();
   const $ = s => document.querySelector(s);
   const escenario = $('#escenario');
-  const ACTS = D.actividades.filter(a => ['pulso', 'ab', 'capacidades', 'matriz', 'paso'].includes(a.id));
+  const ACTS = D.actividades.filter(a => ['pulso', 'ab', 'matriz', 'paso'].includes(a.id));
   const nombreDe = id => (D.actividades.find(a => a.id === id) || {}).nombre || id;
+  // Escenas del presentador que en el celular muestran otra actividad: los resultados de capacidades salen del ejercicio.
+  const PANTALLA = { capacidades: 'matriz' };
+  const pantallaDe = act => PANTALLA[act] || act;
 
   let vivo = null;          // actividad en vivo según los facilitadores
   let vista = null;         // actividad que se muestra en este celular
@@ -100,51 +103,30 @@
     });
   };
 
-  vistas.capacidades = () => {
-    const P = D.capacidades, mia = mis.capacidades || {};
-    const cal = Object.assign({}, mia.calificaciones || {});
-    const completo = () => P.items.every(it => cal[it.id]);
-    escenario.innerHTML = `
-      <p class="p-parte">Autoevaluación</p>
-      <h1 class="p-titulo">${esc(P.pregunta)}</h1>
-      <p class="p-ayuda">${esc(P.ayuda)}</p>
-      ${P.items.map(it => `<div class="escala-item" role="group" aria-labelledby="c-${it.id}">
-        <h3 id="c-${it.id}">${esc(it.titulo)}</h3><p>${esc(it.desc)}</p>
-        <div class="escala">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-it="${it.id}" data-v="${n}" aria-pressed="${cal[it.id] === n}" aria-label="${n}: ${esc(P.escala[n - 1])}">${n}</button>`).join('')}</div>
-        <div class="escala-extremos"><span>${esc(P.escala[0])}</span><span>${esc(P.escala[4])}</span></div></div>`).join('')}
-      <div class="acciones"><button class="boton" id="enviar" type="button" ${completo() ? '' : 'disabled'}>${mia.promedio ? 'Actualizar mi resultado' : 'Ver mi resultado'}</button></div>
-      <div id="mi-resultado">${mia.promedio ? miResultado(mia) : ''}</div>
-      ${mia.promedio ? '<section class="grupo" aria-live="polite"><h2>Promedio del grupo por capacidad</h2><div id="grupo"></div></section>' : ''}`;
-    escenario.querySelectorAll('[data-it]').forEach(b => b.onclick = () => {
-      cal[b.dataset.it] = +b.dataset.v;
-      escenario.querySelectorAll(`[data-it="${b.dataset.it}"]`).forEach(x => x.setAttribute('aria-pressed', x === b));
-      $('#enviar').disabled = !completo();
-    });
-    $('#enviar').onclick = async () => {
-      const vals = P.items.map(it => cal[it.id]);
-      const datos = { calificaciones: cal, promedio: +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) };
-      try {
-        await A.responder(pid, 'capacidades', datos);
-        mis.capacidades = datos; guardarMis(); brindis('Resultado guardado'); vistas.capacidades();
-        setTimeout(() => { const m = $('#mi-resultado'); if (m) m.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-      } catch (e) { fallo(e); }
-    };
-    if (mia.promedio) vigilarGrupo('capacidades', r => {
-      if (!r.length) return '';
-      return P.items.map(it => {
-        const vals = r.map(x => x.calificaciones && x.calificaciones[it.id]).filter(Boolean);
-        const m = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-        return `<div class="barra"><div class="fila"><span>${esc(it.titulo)}</span><b>${m.toFixed(1)}</b></div>
-          <div class="pista"><i style="width:${(m / 5) * 100}%"></i></div></div>`;
-      }).join('') + `<p class="p-ayuda">${r.length} ${r.length === 1 ? 'persona' : 'personas'}</p>`;
-    });
-  };
   function miResultado(mia) {
     const P = D.capacidades;
     const orden = P.items.slice().sort((a, b) => mia.calificaciones[a.id] - mia.calificaciones[b.id]);
     return `<div class="veredicto" style="margin-top:1.5rem">
       <h3>Tu preparación: ${mia.promedio.toFixed(1).replace('.', ',')} de 5</h3>
-      <p>Tu capacidad más baja es <b>${esc(orden[0].titulo.toLowerCase())}</b>. Este promedio será el eje de preparación en el ejercicio de priorización.</p></div>`;
+      <p>Tu capacidad más baja es <b>${esc(orden[0].titulo.toLowerCase())}</b>. Este promedio es el eje de preparación de tu iniciativa en la matriz.</p></div>`;
+  }
+  // Promedio de las seis capacidades, o null si falta alguna.
+  function promedioCap(cal) {
+    const items = D.capacidades.items;
+    if (!cal || !items.every(it => cal[it.id])) return null;
+    return +(items.reduce((s, it) => s + cal[it.id], 0) / items.length).toFixed(2);
+  }
+  // Autoevaluación del ejercicio; si no está completa, la que se hizo como actividad aparte en versiones anteriores.
+  function autoevaluacion(b) {
+    const prom = promedioCap(b && b.calificaciones);
+    return prom != null ? { calificaciones: b.calificaciones, promedio: prom } : (mis.capacidades || null);
+  }
+  // Suma la autoevaluación, sin nombre, al promedio del grupo que proyecta el presentador.
+  async function enviarCapacidades(b) {
+    const prom = promedioCap(b.calificaciones);
+    if (prom == null) return;
+    try { await A.responder(pid, 'capacidades', { calificaciones: b.calificaciones, promedio: prom }); }
+    catch (e) { fallo(e); }
   }
 
   // Ejercicio de priorización ------------------------------------------------
@@ -187,20 +169,32 @@
     }
 
     else if (b.paso === 3) {
-      const prom = mis.capacidades && mis.capacidades.promedio;
-      if (b.preparacion == null) b.preparacion = prom || 3;
+      const K = D.capacidades;
+      if (!b.calificaciones) b.calificaciones = Object.assign({}, (mis.capacidades || {}).calificaciones || {});
+      const cal = b.calificaciones;
       escenario.innerHTML = cabecera + `
-        <p class="p-ayuda">${prom
-          ? `Tu autoevaluación dio <b>${prom.toFixed(1).replace('.', ',')}</b>. Ajústala si esta oportunidad exige capacidades distintas a las del promedio.`
-          : 'No hiciste la autoevaluación en este celular. Estima qué tan preparada está tu organización para esta oportunidad.'}</p>
-        <div class="deslizador"><div class="valor" id="val">${b.preparacion.toFixed(1).replace('.', ',')}</div>
-          <label class="oculto-visual" for="prep">Preparación de 1 a 5</label>
-          <input type="range" id="prep" min="1" max="5" step="0.1" value="${b.preparacion}">
-          <div class="escala-extremos"><span>1 · Incipiente</span><span>5 · Consolidada</span></div></div>
+        <p class="p-ayuda"><b>${esc(K.pregunta)}</b> ${esc(K.ayuda)} El promedio es el eje de preparación de la matriz.</p>
+        ${K.items.map(it => `<div class="escala-item" role="group" aria-labelledby="c-${it.id}">
+          <h3 id="c-${it.id}">${esc(it.titulo)}</h3><p>${esc(it.desc)}</p>
+          <div class="escala">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-it="${it.id}" data-v="${n}" aria-pressed="${cal[it.id] === n}" aria-label="${n}: ${esc(K.escala[n - 1])}">${n}</button>`).join('')}</div>
+          <div class="escala-extremos"><span>${esc(K.escala[0])}</span><span>${esc(K.escala[4])}</span></div></div>`).join('')}
+        <div id="mi-resultado" aria-live="polite"></div>
+        <p class="p-ayuda" style="margin-top:1rem">Tus calificaciones se suman, sin tu nombre, al promedio del grupo.</p>
         <div class="acciones"><button class="boton secundario" id="ant" type="button">Atrás</button>
-          <button class="boton" id="sig" type="button">Ver dónde queda</button></div>`;
-      $('#prep').oninput = e => { b.preparacion = +e.target.value; $('#val').textContent = b.preparacion.toFixed(1).replace('.', ','); guardarMis(); };
-      $('#ant').onclick = () => ir(2); $('#sig').onclick = () => ir(4);
+          <button class="boton" id="sig" type="button" disabled>Ver dónde queda</button></div>`;
+      const actualizar = () => {
+        const prom = promedioCap(cal);
+        $('#mi-resultado').innerHTML = prom != null ? miResultado({ calificaciones: cal, promedio: prom }) : '';
+        $('#sig').disabled = prom == null;
+      };
+      escenario.querySelectorAll('[data-it]').forEach(x => x.onclick = () => {
+        cal[x.dataset.it] = +x.dataset.v; guardarMis();
+        escenario.querySelectorAll(`[data-it="${x.dataset.it}"]`).forEach(y => y.setAttribute('aria-pressed', y === x));
+        actualizar();
+      });
+      actualizar();
+      $('#ant').onclick = () => ir(2);
+      $('#sig').onclick = async () => { $('#sig').disabled = true; await enviarCapacidades(b); ir(4); };
     }
 
     else {
@@ -218,12 +212,13 @@
         <div class="acciones">
           <button class="boton" id="publicar" type="button">${b.publicada ? 'Actualizar en la matriz del grupo' : 'Publicar en la matriz del grupo'}</button>
           <button class="boton secundario" id="ficha-btn" type="button">Descargar mi ficha</button></div>
-        <p class="p-ayuda" style="margin-top:1rem">Solo se publica el nombre de la iniciativa y su ubicación. La descripción se queda en tu celular.</p>
+        <p class="p-ayuda" style="margin-top:1rem">En la matriz del grupo solo aparece el nombre de la iniciativa y su ubicación. La descripción se queda en tu celular.</p>
         <button class="enlace" id="editar" type="button">Editar mis respuestas</button>`;
       $('#publicar').onclick = async () => {
         try {
           await A.responder(pid, 'matriz', { oportunidad: b.oportunidad.trim().slice(0, 80), impacto: r.impacto, preparacion: r.preparacion, cuadrante: r.cuadrante });
           b.publicada = true; guardarMis(); brindis('Publicada en la matriz del grupo'); vistas.matriz();
+          enviarCapacidades(b);   // por si el envío del paso 3 falló
         } catch (e) { fallo(e); }
       };
       $('#ficha-btn').onclick = imprimirFicha;
@@ -233,7 +228,8 @@
   function calcular(b) {
     const suma = D.matriz.criterios.reduce((s, c) => s + (b.criterios[c.id] || 0), 0);  // 0 a 10
     const impacto = +(1 + suma * 0.4).toFixed(2);
-    const preparacion = +(b.preparacion || 3).toFixed(2);
+    const a = autoevaluacion(b);
+    const preparacion = +((a && a.promedio) || b.preparacion || 3).toFixed(2);
     return { impacto, preparacion, cuadrante: U.cuadrante(impacto, preparacion) };
   }
 
@@ -332,7 +328,7 @@
     $('#lista-act').innerHTML = ACTS.map(a => {
       const hecho = a.id === 'matriz' ? mis.matriz && mis.matriz.publicada : !!mis[a.id];
       return `<li><button type="button" data-ir="${a.id}"><span>${esc(a.nombre)}</span>
-        ${a.id === vivo ? '<span class="vivo">En vivo</span>' : hecho ? '<span class="listo">Respondida</span>' : ''}</button></li>`;
+        ${a.id === pantallaDe(vivo) ? '<span class="vivo">En vivo</span>' : hecho ? '<span class="listo">Respondida</span>' : ''}</button></li>`;
     }).join('');
     $('#lista-act').querySelectorAll('[data-ir]').forEach(b => b.onclick = () => { cerrarHojas(); mostrar(b.dataset.ir); window.scrollTo({ top: 0 }); });
     abrirHoja('#hoja-act');
@@ -341,7 +337,7 @@
 
   // --------------------------------------------------------- ficha imprimible
   function imprimirFicha() {
-    const b = mis.matriz || {}, P = D.matriz, cap = mis.capacidades;
+    const b = mis.matriz || {}, P = D.matriz, cap = autoevaluacion(b);
     let html = `<h1>${esc(C.TITULO)}</h1><p>${esc(C.SUBTITULO || '')} · ${new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}</p>`;
     if (b.oportunidad) {
       const r = calcular(b), Q = P.cuadrantes[r.cuadrante];
@@ -366,8 +362,11 @@
       indicador.textContent = A.modo === 'demo' ? 'Modo demo' : 'En vivo';
       if (e.actividad !== vivo) {
         const anterior = vivo; vivo = e.actividad;
-        if (anterior !== null && vivo !== 'espera') brindis('Nueva actividad: ' + nombreDe(vivo));
-        mostrar(vivo);
+        const destino = pantallaDe(vivo);
+        if (destino !== vista) {   // si ya está en esa pantalla (p. ej., en el ejercicio), no se interrumpe
+          if (anterior !== null && vivo !== 'espera') brindis('Nueva actividad: ' + nombreDe(destino));
+          mostrar(destino);
+        }
       }
     } catch (err) {
       indicador.className = 'en-vivo error'; indicador.textContent = 'Sin conexión';

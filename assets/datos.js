@@ -4,8 +4,9 @@ window.DATOS = {
     { id: 'espera',      nombre: 'Sala de espera',        corto: 'Espera' },
     { id: 'pulso',       nombre: 'Punto de partida',      corto: 'Encuesta',     parte: 'Apertura' },
     { id: 'ab',          nombre: '¿Aislada o transformadora?', corto: 'Votación A/B', parte: 'Parte 1' },
-    { id: 'capacidades', nombre: 'Autoevaluación',        corto: 'Capacidades',  parte: 'Parte 2' },
     { id: 'matriz',      nombre: 'Prioriza tu oportunidad', corto: 'Ejercicio',  parte: 'Parte 3' },
+    // Solo en el presentador: promedio de la autoevaluación que se hace dentro del ejercicio.
+    { id: 'capacidades', nombre: 'Preparación del grupo', corto: 'Preparación',  parte: 'Parte 3' },
     { id: 'paso',        nombre: 'Tu siguiente paso',     corto: 'Siguiente paso', parte: 'Cierre' },
     { id: 'preguntas',   nombre: 'Preguntas del público', corto: 'Preguntas' },
     { id: 'fin',         nombre: 'Gracias',               corto: 'Cierre' }

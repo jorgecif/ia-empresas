@@ -16,13 +16,13 @@ Son dos páginas:
 | Sala de espera | Portada y agenda | Mensaje de bienvenida | Título, QR grande y número de personas conectadas |
 | Punto de partida | 3 · Encuesta | Cinco opciones | Barras con el porcentaje de cada etapa |
 | ¿Aislada o transformadora? | 12 · Votación A/B | Los dos casos y una razón opcional | Barra dividida A/B y las razones del grupo |
-| Autoevaluación | 19 · Autoevaluación | Seis capacidades de 1 a 5 y su promedio | Promedio del grupo por capacidad y la más baja |
-| Prioriza tu oportunidad | 24 · Ejercicio | Ejercicio guiado en cuatro pasos con resultado en la matriz | Matriz 2×2 con las oportunidades de todo el grupo |
+| Prioriza tu oportunidad | 24 · Ejercicio | Cuatro pasos: iniciativa, impacto, autoevaluación de las seis capacidades y resultado en la matriz | Matriz 2×2 con las oportunidades de todo el grupo |
+| Preparación del grupo | 24 · Ejercicio | Sigue en el ejercicio | Promedio del grupo por capacidad y la más baja, con las autoevaluaciones del ejercicio |
 | Tu siguiente paso | 25 · Cierre | Un compromiso para esta semana | Muro con los compromisos |
 | Preguntas del público | En cualquier momento | Botón "Preguntar" y votos | Preguntas ordenadas por votos |
 | Gracias | 26 · Gracias | Botón para descargar su ficha | QR para volver a entrar |
 
-El ejercicio conecta las tres partes de la sesión: el impacto sale de los cinco criterios de la parte 1 y la preparación sale de la autoevaluación de la parte 2. Al final, cada participante puede descargar una ficha en PDF con el nombre y la descripción de su iniciativa, su ubicación en la matriz, su autoevaluación y su siguiente paso.
+El ejercicio conecta las tres partes de la sesión: el impacto sale de los cinco criterios de la parte 1 y la preparación, de la autoevaluación de las seis capacidades de la parte 2, que cada persona hace dentro del ejercicio. Al final, cada participante puede descargar una ficha en PDF con el nombre y la descripción de su iniciativa, su ubicación en la matriz, su autoevaluación y su siguiente paso.
 
 ## Dos modos de funcionamiento
 
@@ -77,7 +77,6 @@ Si la dirección es larga, puedes crear un enlace corto (por ejemplo con bit.ly)
 | 5:50 p. m. | Sala de espera (compartir pantalla con el QR) | Ambos |
 | 6:02 p. m. | Punto de partida | Jorge |
 | 6:30 p. m. | ¿Aislada o transformadora? | Jorge |
-| 7:10 p. m. | Autoevaluación | Santiago |
 | 7:30 p. m. | Prioriza tu oportunidad | Jorge (Santiago lee el chat) |
 | 7:50 p. m. | Tu siguiente paso y preguntas | Ambos |
 | 8:00 p. m. | Gracias | Ambos |
@@ -97,7 +96,7 @@ Los colores y la tipografía siguen la plantilla de la universidad y están al i
 ## Seguridad y privacidad
 
 - **No se piden nombres ni correos.** Cada celular recibe un identificador aleatorio que solo sirve para no contar dos veces la misma respuesta.
-- **Qué se publica en la pantalla:** los porcentajes, las razones de la votación A/B, el nombre de la oportunidad y su ubicación en la matriz, y los siguientes pasos. La descripción de la iniciativa nunca sale del celular.
+- **Qué se publica en la pantalla:** los porcentajes, las razones de la votación A/B, el nombre de la oportunidad y su ubicación en la matriz, el promedio del grupo por capacidad y los siguientes pasos. La descripción de la iniciativa nunca sale del celular.
 - **La clave del facilitador** se guarda cifrada en la base de datos y se necesita para cambiar la actividad, marcar preguntas y borrar respuestas.
 - **Las tablas no se pueden leer ni modificar directamente.** Todo pasa por funciones que validan los datos y limitan su tamaño.
 - Cualquier persona con el enlace puede responder. Para una sesión con inscripción previa es suficiente, pero no uses estas herramientas para recoger información sensible.
