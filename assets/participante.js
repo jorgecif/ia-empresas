@@ -385,18 +385,19 @@
   // --------------------------------------------------------- ficha imprimible
   function imprimirFicha() {
     const b = mis.matriz || {}, P = D.matriz, cap = autoevaluacion(b);
-    let html = `<h1>${esc(C.TITULO)}</h1><p>${esc(C.SUBTITULO || '')} · ${new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}</p>`;
+    const fecha = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+    let html = `<div class="ficha-cab"><h1>${esc(C.TITULO)}</h1><p>${esc(C.SUBTITULO || '')} · ${fecha}</p></div>`;
     if (b.oportunidad) {
       const r = calcular(b), Q = P.cuadrantes[r.cuadrante];
-      html += `<h2>Oportunidad priorizada</h2><p><b>${esc(b.oportunidad)}</b></p>
+      html += `<h2>Iniciativa priorizada</h2><p><b>${esc(b.oportunidad)}</b></p>
         ${(b.descripcion || '').trim() ? `<p>${esc(b.descripcion.trim())}</p>` : ''}
-        <p>Impacto: ${r.impacto.toFixed(1)} de 5 · Preparación: ${r.preparacion.toFixed(1)} de 5 · Cuadrante: <b>${esc(Q.nombre)}</b>. ${esc(Q.consejo)}</p>
-        <h2>Criterios de impacto</h2><ul>${P.criterios.map(c => `<li>${esc(c.texto)} ${esc((P.valores.find(v => v.id === (b.criterios || {})[c.id]) || {}).texto || '—')}</li>`).join('')}</ul>`;
+        <p>Impacto: <b>${coma(r.impacto)}</b> de 5 · Preparación: <b>${coma(r.preparacion)}</b> de 5 · Cuadrante: <b>${esc(Q.nombre)}</b>. ${esc(Q.consejo)}</p>
+        <h2>Impacto del negocio</h2><ul>${P.criterios.map(c => `<li>${esc(c.texto)} <b>${esc((P.valores.find(v => v.id === (b.criterios || {})[c.id]) || {}).texto || '—')}</b></li>`).join('')}</ul>`;
     }
-    if (cap) html += `<h2>Autoevaluación de capacidades (promedio ${cap.promedio.toFixed(1)})</h2><ul>${D.capacidades.items.map(it => `<li>${esc(it.titulo)}: ${cap.calificaciones[it.id]} de 5</li>`).join('')}</ul>`;
+    if (cap) html += `<h2>Preparación de la organización (promedio ${coma(cap.promedio)} de 5)</h2><ul>${D.capacidades.items.map(it => `<li>${esc(it.titulo)}: <b>${cap.calificaciones[it.id]}</b> de 5</li>`).join('')}</ul>`;
     if (mis.paso) html += `<h2>Mi siguiente paso</h2><p>${esc(mis.paso.texto)}</p>`;
     if (!b.oportunidad && !cap && !mis.paso) { brindis('Completa al menos una actividad para generar tu ficha.'); return; }
-    $('#ficha').innerHTML = html;
+    $('#ficha-contenido').innerHTML = html;
     window.print();
   }
 

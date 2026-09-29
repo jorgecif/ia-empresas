@@ -43,7 +43,11 @@
   </section>
 
   <div class="brindis" id="brindis" role="status" aria-live="polite"></div>
-  <div id="ficha" aria-hidden="true"></div>
+  <!-- Ficha imprimible: el logo se carga con la página para que aparezca al imprimir. -->
+  <div id="ficha" aria-hidden="true">
+    <img class="ficha-logo" src="assets/logo-uniandes.png" alt="Universidad de los Andes · Facultad de Ciencias Sociales · Educación Continua">
+    <div id="ficha-contenido"></div>
+  </div>
 
   <script src="assets/config.js"></script>
   <script src="assets/datos.js"></script>

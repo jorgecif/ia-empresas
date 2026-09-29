@@ -230,13 +230,18 @@ textarea:focus, input:focus { outline: none; border-color: var(--azul); }
 /* Ficha para imprimir */
 #ficha { display: none; }
 @media print {
-  body * { visibility: hidden !important; }
-  #ficha, #ficha * { visibility: visible !important; }
-  #ficha { display: block !important; position: absolute; inset: 0; padding: 12mm; color: #000; }
-  #ficha h1 { font-size: 20pt; margin: 0 0 4mm; color: var(--azul); }
-  #ficha h2 { font-size: 12pt; margin: 6mm 0 2mm; color: var(--magenta); }
-  #ficha p, #ficha li { font-size: 10pt; }
-  .p-pie, .p-cabecera, .hoja, .brindis { display: none !important; }
+  @page { margin: 14mm 16mm; }
+  /* Se quita todo lo demás (no solo se oculta), para que no queden páginas en blanco. */
+  body { display: block !important; min-height: 0 !important; }
+  body > :not(#ficha) { display: none !important; }
+  #ficha { display: block !important; color: var(--tinta); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #ficha .ficha-logo { display: block; height: 16mm; width: auto; margin: 0 0 6mm; }
+  #ficha .ficha-cab { border-bottom: 1.5pt solid var(--magenta); padding-bottom: 4mm; margin-bottom: 2mm; }
+  #ficha h1 { font-size: 18pt; line-height: 1.2; margin: 0 0 2mm; color: var(--azul); }
+  #ficha .ficha-cab p { margin: 0; color: var(--gris); }
+  #ficha h2 { font-size: 12pt; margin: 6mm 0 2mm; color: var(--magenta); break-after: avoid; }
+  #ficha p, #ficha li { font-size: 10pt; line-height: 1.45; }
+  #ficha ul { margin: 0; padding-left: 5mm; break-inside: avoid; }
 }
 
 @media (prefers-reduced-motion: reduce) {
