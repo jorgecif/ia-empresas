@@ -92,7 +92,12 @@
         d.respuestas['capacidades'] = d.respuestas['capacidades'] || {};
         d.respuestas['capacidades'][pid] = { datos: { calificaciones: cal, promedio: +prom.toFixed(2) }, t };
         if (i < E.oportunidades.length) {
-          const imp = +azar(1.4, 4.8).toFixed(2), prep = +azar(1.3, 4.6).toFixed(2);
+          const criterios = {}; D.matriz.criterios.forEach(c => criterios[c.id] = elegir([0, 1, 1, 2, 2]));
+          const imp = +(1 + Object.values(criterios).reduce((a, b) => a + b, 0) * 0.4).toFixed(2), prep = +azar(1.3, 4.6).toFixed(2);
+          d.respuestas['iniciativa'] = d.respuestas['iniciativa'] || {};
+          d.respuestas['iniciativa'][pid] = { datos: { oportunidad: E.oportunidades[i], descripcion: '' }, t };
+          d.respuestas['impacto'] = d.respuestas['impacto'] || {};
+          d.respuestas['impacto'][pid] = { datos: { criterios, impacto: imp }, t };
           d.respuestas['matriz'] = d.respuestas['matriz'] || {};
           d.respuestas['matriz'][pid] = { datos: { oportunidad: E.oportunidades[i], impacto: imp, preparacion: prep, cuadrante: cuadrante(imp, prep) }, t };
         }

@@ -165,40 +165,67 @@
     const prom = promedioCap(b && b.calificaciones);
     return prom != null ? { calificaciones: b.calificaciones, promedio: prom } : (mis.capacidades || null);
   }
-  // Suma la autoevaluación, sin nombre, al promedio del grupo que proyecta el presentador.
-  async function enviarCapacidades(b) {
-    const prom = promedioCap(b.calificaciones);
-    if (prom == null) return;
-    try { await A.responder(pid, 'capacidades', { calificaciones: b.calificaciones, promedio: prom }); }
-    catch (e) { fallo(e); }
-  }
 
   // Ejercicio de priorización ------------------------------------------------
   // Cada paso es una actividad propia: los facilitadores lo abren desde el presentador.
-  // Lo que escribe la persona se guarda en este celular a medida que avanza.
+  // Lo que escribe la persona se guarda en este celular y se envía con el botón "Enviar" de cada paso.
   function ejercicio() {
     const b = mis.matriz = mis.matriz || { oportunidad: '', descripcion: '', criterios: {}, publicada: false };
-    b.oportunidad = b.oportunidad || ''; b.criterios = b.criterios || {};
+    b.oportunidad = b.oportunidad || ''; b.criterios = b.criterios || {}; b.enviado = b.enviado || {};
     return b;
   }
   const impactoCompleto = b => D.matriz.criterios.every(c => (b.criterios || {})[c.id] !== undefined);
   const coma = n => n.toFixed(1).replace('.', ',');
 
+  // Lo que se envía en cada paso (null si el paso aún no está completo).
+  const datosPaso = {
+    iniciativa: b => b.oportunidad.trim() ? { oportunidad: b.oportunidad.trim().slice(0, 80), descripcion: (b.descripcion || '').trim().slice(0, 300) } : null,
+    impacto: b => impactoCompleto(b) ? { criterios: Object.assign({}, b.criterios), impacto: calcular(b).impacto } : null,
+    capacidades: b => { const prom = promedioCap(b.calificaciones); return prom != null ? { calificaciones: Object.assign({}, b.calificaciones), promedio: prom } : null; }
+  };
+  const enviadoIgual = (b, act) => { const d = datosPaso[act](b); return !!d && b.enviado[act] === JSON.stringify(d); };
+  async function enviarPaso(b, act) {
+    const d = datosPaso[act](b);
+    if (!d) return false;
+    await A.responder(pid, act, d);
+    b.enviado[act] = JSON.stringify(d); guardarMis();
+    return true;
+  }
+
   const cabeceraEj = n => `<p class="p-parte">Ejercicio · Paso ${n} de 4</p>
     <h1 class="p-titulo">${esc(PASOS[n - 1].nombre)}</h1>
     <ol class="pasos-ej" aria-hidden="true">${PASOS.map((p, i) => `<li class="${i + 1 < n ? 'hecho' : i + 1 === n ? 'actual' : ''}"></li>`).join('')}</ol>`;
+  const pieEnvio = `<div class="acciones"><button class="boton ancho" id="enviar-paso" type="button">Enviar</button></div>
+    <p class="aviso" id="listo" aria-live="polite" hidden></p>`;
 
-  // Aviso al terminar un paso: el siguiente lo abren los facilitadores.
+  // Aviso al enviar un paso: el siguiente lo abren los facilitadores.
   function marcarListo(ok, texto) {
     const el = $('#listo'); if (!el) return;
     marcarListo.ultimo = [ok, texto];
     el.hidden = !ok;
     if (!ok) return;
     const otraEnVivo = vivo && vivo !== 'espera' && vivo !== vista;
-    el.innerHTML = `<b>Listo.</b> ${texto || ''} ${otraEnVivo
+    el.innerHTML = `<b>Enviado.</b> ${texto || ''} ${otraEnVivo
       ? '<button type="button" class="enlace" id="ir-vivo">Ir a la actividad en vivo</button>'
       : 'Cuando abramos el siguiente paso, aparecerá aquí.'}`;
     const ir = $('#ir-vivo'); if (ir) ir.onclick = () => { mostrar(vivo); window.scrollTo({ top: 0 }); };
+  }
+  // Conecta el botón "Enviar" de un paso. Devuelve la función que actualiza su estado al cambiar algo.
+  function botonEnviar(b, act, textoListo) {
+    const boton = $('#enviar-paso');
+    const actualizar = () => {
+      const completo = !!datosPaso[act](b), igual = enviadoIgual(b, act);
+      boton.disabled = !completo || igual;
+      boton.textContent = igual ? 'Enviado ✓' : b.enviado[act] ? 'Enviar cambios' : 'Enviar';
+      marcarListo(igual, igual && textoListo ? textoListo() : '');
+    };
+    boton.onclick = async () => {
+      boton.disabled = true;
+      try { await enviarPaso(b, act); brindis('Enviado'); } catch (e) { fallo(e); }
+      actualizar();
+    };
+    actualizar();
+    return actualizar;
   }
   function conectarPasos() {
     escenario.querySelectorAll('[data-ir-paso]').forEach(x => x.onclick = () => { mostrar(x.dataset.irPaso); window.scrollTo({ top: 0 }); });
@@ -213,12 +240,11 @@
         <small>Es lo que aparecerá en la matriz del grupo.</small></label>
       <label class="campo"><span>Descripción de la iniciativa</span>
         <textarea id="descripcion" rows="4" maxlength="300" placeholder="Qué hace, para quién y qué problema resuelve">${esc(b.descripcion || '')}</textarea>
-        <small>Opcional. Se queda en tu celular y sale en tu ficha.</small></label>
-      <p class="aviso" id="listo" aria-live="polite" hidden></p>`;
-    const marcar = () => marcarListo(!!b.oportunidad.trim());
-    $('#oportunidad').oninput = e => { b.oportunidad = e.target.value; guardarMis(); marcar(); };
-    $('#descripcion').oninput = e => { b.descripcion = e.target.value; guardarMis(); };
-    marcar();
+        <small>Opcional. La ven los organizadores y sale en tu ficha; no aparece en la pantalla del grupo.</small></label>
+      ${pieEnvio}`;
+    const actualizar = botonEnviar(b, 'iniciativa');
+    $('#oportunidad').oninput = e => { b.oportunidad = e.target.value; guardarMis(); actualizar(); };
+    $('#descripcion').oninput = e => { b.descripcion = e.target.value; guardarMis(); actualizar(); };
   };
 
   vistas.impacto = () => {
@@ -228,17 +254,16 @@
       ${b.oportunidad.trim() ? '' : '<p class="aviso">Aún no has escrito el nombre de tu iniciativa. <button type="button" class="enlace" data-ir-paso="iniciativa">Ir al paso 1</button></p>'}
       ${P.criterios.map(c => `<div class="criterio" role="group" aria-labelledby="k-${c.id}"><p id="k-${c.id}">${esc(c.texto)}</p>
         <div class="trio">${P.valores.map(v => `<button type="button" data-c="${c.id}" data-v="${v.id}" aria-pressed="${b.criterios[c.id] === v.id}">${v.texto}</button>`).join('')}</div></div>`).join('')}
-      <p class="aviso" id="listo" aria-live="polite" hidden></p>`;
-    const marcar = () => marcarListo(impactoCompleto(b), impactoCompleto(b) ? `Impacto: <b>${coma(calcular(b).impacto)}</b> de 5.` : '');
+      ${pieEnvio}`;
+    const actualizar = botonEnviar(b, 'impacto', () => `Impacto: <b>${coma(calcular(b).impacto)}</b> de 5.`);
     escenario.querySelectorAll('[data-c]').forEach(x => x.onclick = () => {
       b.criterios[x.dataset.c] = +x.dataset.v; guardarMis();
       escenario.querySelectorAll(`[data-c="${x.dataset.c}"]`).forEach(y => y.setAttribute('aria-pressed', y === x));
-      marcar();
+      actualizar();
     });
-    conectarPasos(); marcar();
+    conectarPasos();
   };
 
-  let temporizadorCap = null;
   vistas.capacidades = () => {
     const K = D.capacidades, b = ejercicio();
     if (!b.calificaciones) b.calificaciones = Object.assign({}, (mis.capacidades || {}).calificaciones || {});
@@ -250,20 +275,18 @@
         <div class="escala">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-it="${it.id}" data-v="${n}" aria-pressed="${cal[it.id] === n}" aria-label="${n}: ${esc(K.escala[n - 1])}">${n}</button>`).join('')}</div>
         <div class="escala-extremos"><span>${esc(K.escala[0])}</span><span>${esc(K.escala[4])}</span></div></div>`).join('')}
       <div id="mi-resultado" aria-live="polite"></div>
-      <p class="p-ayuda" style="margin-top:1rem">Tus calificaciones se suman, sin tu nombre, al promedio del grupo.</p>
-      <p class="aviso" id="listo" aria-live="polite" hidden></p>`;
+      <p class="p-ayuda" style="margin-top:1rem">Al enviar, tus calificaciones se suman al promedio del grupo (en la pantalla, sin tu nombre).</p>
+      ${pieEnvio}`;
+    const actualizarBoton = botonEnviar(b, 'capacidades');
     const actualizar = () => {
       const prom = promedioCap(cal);
       $('#mi-resultado').innerHTML = prom != null ? miResultado({ calificaciones: cal, promedio: prom }) : '';
-      marcarListo(prom != null);
+      actualizarBoton();
     };
     escenario.querySelectorAll('[data-it]').forEach(x => x.onclick = () => {
       cal[x.dataset.it] = +x.dataset.v; guardarMis();
       escenario.querySelectorAll(`[data-it="${x.dataset.it}"]`).forEach(y => y.setAttribute('aria-pressed', y === x));
       actualizar();
-      // En cuanto están las seis, se envían (y se reenvían si cambia alguna) para el promedio del grupo.
-      clearTimeout(temporizadorCap);
-      if (promedioCap(cal) != null) temporizadorCap = setTimeout(() => enviarCapacidades(b), 700);
     });
     actualizar();
   };
@@ -296,13 +319,14 @@
       <div class="acciones">
         <button class="boton" id="publicar" type="button">${b.publicada ? 'Actualizar en la matriz del grupo' : 'Publicar en la matriz del grupo'}</button>
         <button class="boton secundario" id="ficha-btn" type="button">Descargar mi ficha</button></div>
-      <p class="p-ayuda" style="margin-top:1rem">En la matriz del grupo solo aparece el nombre de la iniciativa y su ubicación. La descripción se queda en tu celular.</p>
+      <p class="p-ayuda" style="margin-top:1rem">En la matriz del grupo solo aparece el nombre de la iniciativa y su ubicación.</p>
       <button class="enlace" type="button" data-ir-paso="iniciativa">Editar mis respuestas</button>`;
     $('#publicar').onclick = async () => {
       try {
         await A.responder(pid, 'matriz', { oportunidad: b.oportunidad.trim().slice(0, 80), impacto: r.impacto, preparacion: r.preparacion, cuadrante: r.cuadrante });
         b.publicada = true; guardarMis(); brindis('Publicada en la matriz del grupo'); vistas.matriz();
-        enviarCapacidades(b);   // por si el envío del paso 3 falló
+        // Envía también los pasos que la persona no alcanzó a enviar o que cambió después de enviarlos.
+        for (const act of Object.keys(datosPaso)) if (!enviadoIgual(b, act)) await enviarPaso(b, act).catch(() => {});
       } catch (e) { fallo(e); }
     };
     $('#ficha-btn').onclick = imprimirFicha;
@@ -411,9 +435,7 @@
 
   function hechaActividad(id) {
     const b = mis.matriz || {};
-    if (id === 'iniciativa') return !!(b.oportunidad || '').trim();
-    if (id === 'impacto') return impactoCompleto(b);
-    if (id === 'capacidades') return !!autoevaluacion(b);
+    if (['iniciativa', 'impacto', 'capacidades'].includes(id)) return !!(b.enviado || {})[id];
     if (id === 'matriz') return !!b.publicada;
     return !!mis[id];
   }

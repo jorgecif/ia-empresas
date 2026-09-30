@@ -16,9 +16,9 @@ Son dos páginas:
 | Sala de espera | Portada y agenda | Bienvenida y formulario de registro (nombre, correo, organización y autorización) | Título, QR grande y número de personas conectadas |
 | Punto de partida | 3 · Encuesta | Cinco opciones | Barras con el porcentaje de cada etapa |
 | ¿Aislada o transformadora? | 12 · Votación A/B | Los dos casos y una razón opcional | Barra dividida A/B y las razones del grupo |
-| Ejercicio · 1. Nombre de la iniciativa | 24 · Ejercicio | Nombre y descripción opcional de su iniciativa | Instrucciones y un ejemplo |
-| Ejercicio · 2. Impacto del negocio | 24 · Ejercicio | Los cinco criterios de la parte 1 (Sí, En parte, No) | Los cinco criterios |
-| Ejercicio · 3. Preparación de la organización | 24 · Ejercicio | Las seis capacidades de 1 a 5 y su promedio | Promedio del grupo por capacidad y la más baja, en vivo |
+| Ejercicio · 1. Nombre de la iniciativa | 24 · Ejercicio | Nombre y descripción opcional de su iniciativa, y botón Enviar | Instrucciones, un ejemplo y cuántas personas enviaron |
+| Ejercicio · 2. Impacto del negocio | 24 · Ejercicio | Los cinco criterios de la parte 1 (Sí, En parte, No), y botón Enviar | Los cinco criterios y cuántas personas enviaron |
+| Ejercicio · 3. Preparación de la organización | 24 · Ejercicio | Las seis capacidades de 1 a 5, su promedio y botón Enviar | Promedio del grupo por capacidad y la más baja, en vivo |
 | Ejercicio · 4. Resultados | 24 · Ejercicio | Su cuadrante, su punto en la matriz y el botón para publicarlo | Matriz 2×2 con las oportunidades de todo el grupo |
 | Tu siguiente paso | 25 · Cierre | Un compromiso para esta semana | Muro con los compromisos |
 | Preguntas del público | En cualquier momento | Botón "Preguntar" y votos | Preguntas ordenadas por votos |
@@ -85,7 +85,7 @@ Si la dirección es larga, puedes crear un enlace corto (por ejemplo con bit.ly)
 
 Atajos en el presentador: **→** y **←** cambian la actividad en vivo, **R** oculta el panel lateral para proyectar solo los resultados y **F** activa la pantalla completa.
 
-Cuando cambias la actividad, los celulares de los participantes cambian solos. Cada paso del ejercicio es una actividad propia: tú decides cuándo abrir el siguiente, y quien termina antes ve un aviso de que el siguiente paso aparecerá solo. Cada persona puede volver a un paso o actividad anterior desde el botón "Actividades", y quien llegue tarde a "Resultados" ve qué pasos le faltan. Lo que escriben en el ejercicio se guarda en su celular mientras avanzan, así que no se pierde si cambias de actividad.
+Cuando cambias la actividad, los celulares de los participantes cambian solos. Cada paso del ejercicio es una actividad propia: tú decides cuándo abrir el siguiente. En los pasos 1 a 3 cada persona pulsa **Enviar** (el botón pasa a "Enviado ✓", o a "Enviar cambios" si edita después) y el presentador muestra cuántas personas enviaron; al publicar en la matriz se envía también lo que haya quedado pendiente. Cada persona puede volver a un paso o actividad anterior desde el botón "Actividades", y quien llegue tarde a "Resultados" ve qué pasos le faltan. Lo que escriben en el ejercicio se guarda en su celular mientras avanzan, así que no se pierde si cambias de actividad.
 
 Una sugerencia práctica: como la sesión es virtual, alterna entre compartir la presentación y compartir la pestaña del presentador. También puedes pegar en el chat el enlace de participación al inicio de cada actividad.
 

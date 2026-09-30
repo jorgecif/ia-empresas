@@ -42,11 +42,14 @@ create table if not exists public.participantes (
 
 create table if not exists public.respuestas (
   participante uuid not null references public.participantes(id) on delete cascade,
-  actividad    text not null check (actividad in ('pulso','ab','capacidades','matriz','paso')),
+  actividad    text not null,
   datos        jsonb not null,
   actualizado  timestamptz not null default now(),
   primary key (participante, actividad)
 );
+-- Las actividades las define assets/datos.js; aquí solo se valida el formato.
+alter table public.respuestas drop constraint if exists respuestas_actividad_check;
+alter table public.respuestas add constraint respuestas_actividad_check check (actividad ~ '^[a-z_]{2,30}$');
 
 create table if not exists public.preguntas (
   id           bigint generated always as identity primary key,
@@ -157,7 +160,8 @@ security definer
 set search_path = public
 as $$
 begin
-  if p_actividad not in ('pulso','ab','capacidades','matriz','paso') then
+  -- Las actividades las define assets/datos.js; aquí solo se valida el formato del identificador.
+  if coalesce(p_actividad, '') !~ '^[a-z_]{2,30}$' then
     raise exception 'Actividad no válida: %', p_actividad;
   end if;
   if p_datos is null or jsonb_typeof(p_datos) <> 'object' then
