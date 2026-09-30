@@ -44,15 +44,17 @@
   const vistas = {};
 
   // --------------------------------------------------------- registro (nombre, correo, organización)
-  // Se guarda aparte de las respuestas, sin el identificador del participante.
+  // Se asocia a este celular, así que los facilitadores ven quién dio cada respuesta.
+  // Un registro hecho con la versión anterior (que prometía anonimato) no cuenta: se pide de nuevo.
+  const registrado = () => !!(mis.registro && mis.registro.vinculado);
   const borradorReg = {};   // lo escrito se conserva si la actividad cambia antes de enviar
   const correoValido = c => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c);
   let editandoReg = false;
   function htmlRegistro() {
-    const R = D.registro, r = mis.registro;
+    const R = D.registro, r = registrado() ? mis.registro : null;
     if (r && !editandoReg) return `<section class="registro hecho" id="registro">
         <p>Gracias, <b>${esc(r.nombre)}</b>. <button type="button" class="enlace" id="r-editar">Editar mis datos</button></p></section>`;
-    const v = Object.assign({}, r || {}, borradorReg);
+    const v = Object.assign({}, mis.registro || {}, borradorReg);
     return `<section class="registro" id="registro" aria-labelledby="r-titulo">
       <h2 id="r-titulo">${esc(R.titulo)}</h2>
       <label class="campo"><span>Nombre</span><input id="r-nombre" type="text" autocomplete="name" maxlength="120" value="${esc(v.nombre || '')}"></label>
@@ -76,8 +78,8 @@
       if (!datos.autoriza) return brindis('Marca la autorización para enviar tus datos.');
       env.disabled = true;
       try {
-        await A.registrar(datos);
-        mis.registro = { nombre: datos.nombre, correo: datos.correo, organizacion: datos.organizacion }; guardarMis();
+        await A.registrar(pid, datos);
+        mis.registro = { nombre: datos.nombre, correo: datos.correo, organizacion: datos.organizacion, vinculado: true }; guardarMis();
         editandoReg = false; brindis('Datos enviados. ¡Gracias!'); repintar();
       } catch (e) { env.disabled = false; fallo(e); }
     };
@@ -348,7 +350,7 @@
     escenario.innerHTML = `<p class="p-parte">Cierre</p>
       <h1 class="p-titulo">Gracias por participar</h1>
       <p class="p-ayuda">Descarga tu ficha con la oportunidad que priorizaste, tu autoevaluación y tu siguiente paso.</p>
-      ${mis.registro ? '' : htmlRegistro()}
+      ${registrado() ? '' : htmlRegistro()}
       <div class="acciones"><button class="boton" id="ficha-btn" type="button">Descargar mi ficha</button></div>
       <p class="p-ayuda" style="margin-top:2rem">Conoce más programas en <a href="https://educacioncontinua.uniandes.edu.co" target="_blank" rel="noopener">educacioncontinua.uniandes.edu.co</a>.</p>`;
     $('#ficha-btn').onclick = imprimirFicha;
@@ -417,7 +419,7 @@
   }
   $('#btn-actividades').onclick = () => {
     $('#lista-act').innerHTML = `<li><button type="button" data-ir="espera"><span>Mis datos</span>
-        ${mis.registro ? '<span class="listo">Enviados</span>' : ''}</button></li>` + ACTS.map(a => {
+        ${registrado() ? '<span class="listo">Enviados</span>' : ''}</button></li>` + ACTS.map(a => {
       const hecho = hechaActividad(a.id);
       return `<li><button type="button" data-ir="${a.id}"><span>${esc(etiqueta(a.id))}</span>
         ${a.id === vivo ? '<span class="vivo">En vivo</span>' : hecho ? '<span class="listo">Respondida</span>' : ''}</button></li>`;

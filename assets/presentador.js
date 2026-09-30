@@ -308,52 +308,90 @@
     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
     else document.exitFullscreen();
   }
-  // Resultados de todas las actividades en un Excel: una hoja de resumen y una por actividad.
-  // Son anónimos y ya son visibles en las pantallas, así que no piden la clave.
-  $('#btn-resultados').onclick = async () => {
-    const boton = $('#btn-resultados'); boton.disabled = true;
-    try {
-      const [pulso, ab, cap, mz, paso, preguntas, res] = await Promise.all([
-        A.resultados('pulso'), A.resultados('ab'), A.resultados('capacidades'), A.resultados('matriz'), A.resultados('paso'),
-        A.preguntas('00000000-0000-0000-0000-000000000000'), A.resumen()]);
-      const n = v => ({ v, s: 1 }), pct = (a, t) => ({ v: t ? a / t : 0, s: 2 }), dec = v => ({ v: +(+v || 0).toFixed(2), s: 3 });
-      const prom = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-      const K = D.capacidades.items, Q = D.matriz.cuadrantes;
-      const votosA = ab.filter(x => x.opcion === 'A').length;
-      const promCap = K.map(it => prom(cap.map(x => (x.calificaciones || {})[it.id]).filter(Boolean)));
+  // ------------------------------------------------------------ descargas (solo con la clave)
+  // Descarga el archivo y deja un enlace visible por si el navegador bloqueó la descarga automática.
+  function ofrecerDescarga(blob, nombre) {
+    const a = $('#enlace-descarga');
+    if (a.getAttribute('href')) URL.revokeObjectURL(a.href);
+    a.href = URL.createObjectURL(blob); a.download = nombre;
+    a.textContent = 'Guardar ' + nombre; a.hidden = false;
+    a.click();
+  }
+  const hoy = () => new Date().toLocaleDateString('sv-SE');
 
-      const resumen = [
-        [n(C.TITULO)], [C.SUBTITULO || ''], ['Descargado el', new Date().toLocaleString('es-CO')], [],
-        [n('Participación'), n('Personas')], ['Participantes', res.participantes || 0], ['Registrados', res.registros || 0], [],
-        [n('Punto de partida'), n('Respuestas'), n('Porcentaje')],
-        ...D.pulso.opciones.map(o => { const c = pulso.filter(x => x.opcion === o.id).length; return [o.titulo, c, pct(c, pulso.length)]; }),
-        ['Total', pulso.length], [],
-        [n('¿Aislada o transformadora?'), n('Votos'), n('Porcentaje')],
-        ['Opción A', votosA, pct(votosA, ab.length)], ['Opción B', ab.length - votosA, pct(ab.length - votosA, ab.length)], ['Total', ab.length], [],
-        [n('Preparación de la organización'), n('Promedio (1 a 5)')],
-        ...K.map((it, i) => [it.titulo, dec(promCap[i])]), ['Promedio general', dec(prom(cap.map(x => x.promedio || 0)))], ['Personas', cap.length], [],
-        [n('Resultados del ejercicio'), n('Iniciativas')],
-        ...Object.keys(Q).map(k => [Q[k].nombre, mz.filter(x => U.cuadrante(x.impacto, x.preparacion) === k).length]), ['Total', mz.length], [],
-        [n('Cierre'), n('Cantidad')], ['Compromisos (siguiente paso)', paso.length], ['Preguntas del público', preguntas.length]
-      ];
-      const hojas = [
-        { nombre: 'Resumen', anchos: [42, 14, 14], filas: resumen },
-        { nombre: 'Votación A-B', anchos: [8, 90], filas: [[n('Voto'), n('Razón')], ...ab.map(x => [x.opcion, x.razon || ''])] },
-        { nombre: 'Preparación', anchos: [6, ...K.map(() => 16), 12],
-          filas: [[n('#'), ...K.map(it => n(it.titulo)), n('Promedio')],
-                  ...cap.map((x, i) => [i + 1, ...K.map(it => (x.calificaciones || {})[it.id]), dec(x.promedio)]),
-                  [n('Grupo'), ...promCap.map(dec), dec(prom(cap.map(x => x.promedio || 0)))]] },
-        { nombre: 'Iniciativas', anchos: [50, 16, 18, 24],
-          filas: [[n('Iniciativa'), n('Impacto (1 a 5)'), n('Preparación (1 a 5)'), n('Cuadrante')],
-                  ...mz.map(x => [x.oportunidad, dec(x.impacto), dec(x.preparacion), (Q[U.cuadrante(x.impacto, x.preparacion)] || {}).nombre || ''])] },
-        { nombre: 'Siguiente paso', anchos: [100], filas: [[n('Compromiso')], ...paso.map(x => [x.texto])] },
-        { nombre: 'Preguntas', anchos: [90, 8, 12],
-          filas: [[n('Pregunta'), n('Votos'), n('Respondida')], ...preguntas.map(q => [q.texto, q.votos, q.respondida ? 'Sí' : 'No'])] }
-      ];
-      EXCEL.descargar(EXCEL.libro(hojas), `resultados-ia-empresas-${new Date().toLocaleDateString('sv-SE')}.xlsx`);
-    } catch (e) { alert('No se pudieron descargar los resultados: ' + e.message); }
+  // Resultados de todas las actividades en un Excel, con el nombre, correo y organización de quien
+  // se registró. Por eso pide la clave del facilitador.
+  function hojasResultados(d) {
+    const n = v => ({ v, s: 1 }), pct = (a, t) => ({ v: t ? a / t : 0, s: 2 });
+    const dec = v => (v == null || v === '' || isNaN(+v) ? '' : { v: +(+v).toFixed(2), s: 3 });
+    const prom = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    const K = D.capacidades.items, Q = D.matriz.cuadrantes;
+    const personas = new Map((d.personas || []).map(p => [p.participante, p]));
+    const quien = pid => { const p = personas.get(pid); return p ? [p.nombre, p.correo, p.organizacion] : ['Sin registro', '', '']; };
+    const QUIEN = [n('Nombre'), n('Correo'), n('Organización')];
+    const respuestas = d.respuestas || [], preguntas = d.preguntas || [];
+    const de = act => respuestas.filter(r => r.actividad === act);
+    const pulso = de('pulso'), ab = de('ab'), cap = de('capacidades'), mz = de('matriz'), paso = de('paso');
+    const opcion = id => (D.pulso.opciones.find(o => o.id === id) || {}).titulo || id || '';
+    const cuadrante = x => (Q[U.cuadrante(x.impacto, x.preparacion)] || {}).nombre || '';
+    const votosA = ab.filter(r => r.datos.opcion === 'A').length;
+    const promCap = K.map(it => prom(cap.map(r => (r.datos.calificaciones || {})[it.id]).filter(Boolean)));
+    const promGeneral = prom(cap.map(r => r.datos.promedio || 0));
+
+    // Una fila por persona que respondió algo, preguntó o se registró.
+    const porPersona = new Map();
+    const de_ = pid => { if (!porPersona.has(pid)) porPersona.set(pid, {}); return porPersona.get(pid); };
+    personas.forEach((p, pid) => de_(pid));
+    respuestas.forEach(r => { de_(r.participante)[r.actividad] = r.datos; });
+    preguntas.forEach(q => { const f = de_(q.participante); f.preguntas = (f.preguntas || []).concat(q.texto); });
+    const filasPersona = [...porPersona].map(([pid, f]) => [...quien(pid),
+      f.pulso ? opcion(f.pulso.opcion) : '', f.ab ? f.ab.opcion : '', f.ab ? f.ab.razon || '' : '',
+      ...K.map(it => f.capacidades ? (f.capacidades.calificaciones || {})[it.id] : ''), f.capacidades ? dec(f.capacidades.promedio) : '',
+      f.matriz ? f.matriz.oportunidad : '', f.matriz ? dec(f.matriz.impacto) : '', f.matriz ? dec(f.matriz.preparacion) : '',
+      f.matriz ? cuadrante(f.matriz) : '', f.paso ? f.paso.texto : '', (f.preguntas || []).join(' | ')])
+      .sort((a, b) => (a[0] === 'Sin registro') - (b[0] === 'Sin registro') || String(a[0]).localeCompare(b[0], 'es', { numeric: true }));
+
+    const resumen = [
+      [n(C.TITULO)], [C.SUBTITULO || ''], ['Descargado el', new Date().toLocaleString('es-CO')], [],
+      [n('Participación'), n('Personas')], ['Personas con alguna respuesta o registro', porPersona.size],
+      ['Registradas', personas.size], [],
+      [n('Punto de partida'), n('Respuestas'), n('Porcentaje')],
+      ...D.pulso.opciones.map(o => { const c = pulso.filter(r => r.datos.opcion === o.id).length; return [o.titulo, c, pct(c, pulso.length)]; }),
+      ['Total', pulso.length], [],
+      [n('¿Aislada o transformadora?'), n('Votos'), n('Porcentaje')],
+      ['Opción A', votosA, pct(votosA, ab.length)], ['Opción B', ab.length - votosA, pct(ab.length - votosA, ab.length)], ['Total', ab.length], [],
+      [n('Preparación de la organización'), n('Promedio (1 a 5)')],
+      ...K.map((it, i) => [it.titulo, dec(promCap[i])]), ['Promedio general', dec(promGeneral)], ['Personas', cap.length], [],
+      [n('Resultados del ejercicio'), n('Iniciativas')],
+      ...Object.keys(Q).map(k => [Q[k].nombre, mz.filter(r => U.cuadrante(r.datos.impacto, r.datos.preparacion) === k).length]), ['Total', mz.length], [],
+      [n('Cierre'), n('Cantidad')], ['Compromisos (siguiente paso)', paso.length], ['Preguntas del público', preguntas.length]
+    ];
+    const A3 = [28, 30, 26];
+    return [
+      { nombre: 'Resumen', anchos: [42, 14, 14], filas: resumen },
+      { nombre: 'Por persona', anchos: [...A3, 16, 10, 50, ...K.map(() => 14), 12, 40, 10, 12, 22, 60, 60],
+        filas: [[...QUIEN, n('Punto de partida'), n('Voto A/B'), n('Razón'), ...K.map(it => n(it.titulo)), n('Promedio preparación'),
+                 n('Iniciativa'), n('Impacto'), n('Preparación'), n('Cuadrante'), n('Siguiente paso'), n('Preguntas')], ...filasPersona] },
+      { nombre: 'Encuesta', anchos: [...A3, 18], filas: [[...QUIEN, n('Punto de partida')], ...pulso.map(r => [...quien(r.participante), opcion(r.datos.opcion)])] },
+      { nombre: 'Votación A-B', anchos: [...A3, 8, 80], filas: [[...QUIEN, n('Voto'), n('Razón')], ...ab.map(r => [...quien(r.participante), r.datos.opcion, r.datos.razon || ''])] },
+      { nombre: 'Preparación', anchos: [...A3, ...K.map(() => 16), 12],
+        filas: [[...QUIEN, ...K.map(it => n(it.titulo)), n('Promedio')],
+                ...cap.map(r => [...quien(r.participante), ...K.map(it => (r.datos.calificaciones || {})[it.id]), dec(r.datos.promedio)]),
+                [n('Promedio del grupo'), '', '', ...promCap.map(dec), dec(promGeneral)]] },
+      { nombre: 'Iniciativas', anchos: [...A3, 45, 16, 18, 24],
+        filas: [[...QUIEN, n('Iniciativa'), n('Impacto (1 a 5)'), n('Preparación (1 a 5)'), n('Cuadrante')],
+                ...mz.map(r => [...quien(r.participante), r.datos.oportunidad, dec(r.datos.impacto), dec(r.datos.preparacion), cuadrante(r.datos)])] },
+      { nombre: 'Siguiente paso', anchos: [...A3, 90], filas: [[...QUIEN, n('Compromiso')], ...paso.map(r => [...quien(r.participante), r.datos.texto])] },
+      { nombre: 'Preguntas', anchos: [...A3, 80, 8, 12, 10],
+        filas: [[...QUIEN, n('Pregunta'), n('Votos'), n('Respondida'), n('Oculta')],
+                ...preguntas.map(q => [...quien(q.participante), q.texto, q.votos, q.respondida ? 'Sí' : 'No', q.oculta ? 'Sí' : 'No'])] }
+    ];
+  }
+  $('#btn-resultados').onclick = () => conClave(async k => {
+    const boton = $('#btn-resultados'); boton.disabled = true;
+    try { ofrecerDescarga(EXCEL.libro(hojasResultados(await A.exportarResultados(k))), `resultados-ia-empresas-${hoy()}.xlsx`); }
     finally { boton.disabled = false; }
-  };
+  });
 
   // Registros (nombre, correo, organización) en CSV para Excel en español: separador ";" y BOM UTF-8.
   $('#btn-registros').onclick = () => conClave(async k => {
@@ -364,11 +402,7 @@
     const lineas = [['Nombre', 'Correo', 'Organización', 'Autoriza contacto', 'Fecha'].map(campo).join(';')]
       .concat(filas.map(f => [f.nombre, f.correo, f.organizacion, f.autoriza ? 'Sí' : 'No',
         new Date(f.creado).toLocaleString('es-CO')].map(campo).join(';')));
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['\ufeff' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
-    a.download = `registros-ia-empresas-${new Date().toLocaleDateString('sv-SE')}.csv`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    ofrecerDescarga(new Blob(['\ufeff' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' }), `registros-ia-empresas-${hoy()}.csv`);
   });
   $('#btn-reiniciar').onclick = () => {
     if (!confirm('Esto borra todas las respuestas, preguntas y participantes, y vuelve a la sala de espera. Los registros (nombre, correo, organización) se conservan. ¿Continuar?')) return;

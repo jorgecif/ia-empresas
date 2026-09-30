@@ -56,8 +56,9 @@
       marcarPregunta: (clave, id, respondida, oculta) =>
         rpc('marcar_pregunta', { p_clave: clave, p_pregunta: id, p_respondida: respondida, p_oculta: oculta }),
       reiniciar: clave => rpc('reiniciar_sesion', { p_clave: clave }),
-      registrar: r => rpc('registrar', { p_nombre: r.nombre, p_correo: r.correo, p_organizacion: r.organizacion, p_autoriza: r.autoriza }),
-      async exportarRegistros(clave) { return await rpc('exportar_registros', { p_clave: clave }) || []; }
+      registrar: (pid, r) => rpc('registrar', { p_participante: pid, p_nombre: r.nombre, p_correo: r.correo, p_organizacion: r.organizacion, p_autoriza: r.autoriza }),
+      async exportarRegistros(clave) { return await rpc('exportar_registros', { p_clave: clave }) || []; },
+      exportarResultados: clave => rpc('exportar_resultados', { p_clave: clave })
     };
   }
 
@@ -104,7 +105,11 @@
         d.preguntas.push({ id: d.sig++, participante: 'demo-' + i, texto: q, respondida: false, oculta: false, creada: Date.now() - i * 1000 });
         for (let v = 0; v < 4 - i; v++) d.votos.push([d.sig - 1, 'demo-' + (v + 5)]);
       });
-      d.actividad = leer().actividad; d.registros = leer().registros || [];
+      const orgs = ['Universidad de los Andes', 'Banco del Sur', 'Flores de la Sabana', 'Cancillería', 'Logística Andina'];
+      d.registros = (leer().registros || []).concat(Array.from({ length: 16 }, (_, i) => ({
+        participante: 'demo-' + i, nombre: 'Persona de ejemplo ' + (i + 1), correo: `persona${i + 1}@ejemplo.com`,
+        organizacion: orgs[i % orgs.length], autoriza: true, creado: new Date(Date.now() - (22 - i) * 60000).toISOString() })));
+      d.actividad = leer().actividad;
       guardar(d);
     }
 
@@ -158,13 +163,32 @@
         guardar(d);
       },
       async reiniciar() { const r = leer().registros || []; const d = vacio(); d.registros = r; guardar(d); },   // los registros se conservan
-      async registrar(r) {
-        const d = leer(), correo = (r.correo || '').trim().toLowerCase();
-        d.registros = (d.registros || []).filter(x => x.correo !== correo);
-        d.registros.push({ nombre: r.nombre.trim(), correo, organizacion: r.organizacion.trim(), autoriza: true, creado: new Date().toISOString() });
+      async registrar(pid, r) {
+        const d = leer(); unir(d, pid);
+        d.registros = (d.registros || []).filter(x => x.participante !== pid);
+        d.registros.push({ participante: pid, nombre: r.nombre.trim(), correo: (r.correo || '').trim().toLowerCase(),
+                           organizacion: r.organizacion.trim(), autoriza: true, creado: new Date().toISOString() });
         guardar(d);
       },
-      async exportarRegistros() { return leer().registros || []; },
+      async exportarRegistros() {   // uno por correo, como en Supabase
+        const porCorreo = new Map(); (leer().registros || []).forEach(x => porCorreo.set(x.correo, x));
+        return [...porCorreo.values()];
+      },
+      async exportarResultados() {
+        const d = leer();
+        const respuestas = [];
+        Object.keys(d.respuestas).forEach(act => Object.keys(d.respuestas[act]).forEach(pid => {
+          const x = d.respuestas[act][pid];
+          respuestas.push({ participante: pid, actividad: act, datos: x.datos, actualizado: new Date(x.t).toISOString() });
+        }));
+        respuestas.sort((a, b) => a.actualizado.localeCompare(b.actualizado));
+        return {
+          personas: (d.registros || []).filter(x => x.participante),
+          respuestas,
+          preguntas: d.preguntas.map(q => ({ participante: q.participante, texto: q.texto, respondida: q.respondida, oculta: q.oculta,
+                                             creada: new Date(q.creada).toISOString(), votos: d.votos.filter(v => v[0] === q.id).length }))
+        };
+      },
       cargarEjemplo
     };
   }

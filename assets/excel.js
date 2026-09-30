@@ -100,13 +100,5 @@ window.EXCEL = (function () {
     ]);
   }
 
-  // Descarga un archivo generado en el navegador.
-  function descargar(blob, nombre) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = nombre;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  }
-
-  return { libro, descargar };
+  return { libro };
 })();

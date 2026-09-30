@@ -17,8 +17,8 @@ window.DATOS = {
   // Formulario de la sala de espera. Revisa el texto de autorización con la política de datos de la universidad.
   registro: {
     titulo: 'Cuéntanos quién eres',
-    ayuda: 'Estos datos se guardan aparte: tus respuestas en las actividades siguen siendo anónimas.',
-    autorizacion: 'Autorizo el uso de estos datos para que los organizadores me contacten sobre esta sesión y programas relacionados.'
+    ayuda: 'Los organizadores verán tus respuestas junto a estos datos. En la pantalla del grupo tus respuestas aparecen sin tu nombre. Si prefieres no registrarte, puedes participar igual.',
+    autorizacion: 'Autorizo a los organizadores a usar estos datos y mis respuestas en las actividades para analizar los resultados de la sesión y contactarme sobre esta sesión y programas relacionados.'
   },
 
   pulso: {

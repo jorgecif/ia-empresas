@@ -55,17 +55,22 @@ create table if not exists public.preguntas (
   creada       timestamptz not null default now()
 );
 
--- Registro de asistentes (nombre, correo, organización). A propósito NO guarda el
--- identificador del participante: así las respuestas siguen siendo anónimas.
+-- Registro de asistentes (nombre, correo, organización). Cada registro se asocia al celular
+-- que lo envió, para que los facilitadores sepan quién dio cada respuesta.
 create table if not exists public.registros (
   id           bigint generated always as identity primary key,
+  participante uuid references public.participantes(id) on delete set null,
   nombre       text not null,
-  correo       text not null unique,
+  correo       text not null,
   organizacion text not null,
   autoriza     boolean not null default false,
   creado       timestamptz not null default now(),
   actualizado  timestamptz not null default now()
 );
+-- Para proyectos creados con la versión anterior (registros sin vínculo, un registro por correo).
+alter table public.registros add column if not exists participante uuid references public.participantes(id) on delete set null;
+alter table public.registros drop constraint if exists registros_correo_key;
+create unique index if not exists registros_participante_idx on public.registros (participante);
 
 create table if not exists public.votos_pregunta (
   pregunta     bigint not null references public.preguntas(id) on delete cascade,
@@ -203,8 +208,9 @@ as $$
   );
 $$;
 
--- Guarda o actualiza (por correo) el registro de una persona.
-create or replace function public.registrar(p_nombre text, p_correo text, p_organizacion text, p_autoriza boolean)
+-- Guarda o actualiza el registro del participante (un registro por celular).
+drop function if exists public.registrar(text, text, text, boolean);
+create or replace function public.registrar(p_participante uuid, p_nombre text, p_correo text, p_organizacion text, p_autoriza boolean)
 returns void
 language plpgsql
 security definer
@@ -215,14 +221,16 @@ declare
   v_correo text := lower(left(btrim(coalesce(p_correo, '')), 160));
   v_org    text := left(btrim(coalesce(p_organizacion, '')), 160);
 begin
+  if p_participante is null then raise exception 'Falta el identificador del participante'; end if;
   if char_length(v_nombre) < 2 then raise exception 'Escribe tu nombre'; end if;
   if v_correo !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then raise exception 'Revisa tu correo'; end if;
   if char_length(v_org) < 2 then raise exception 'Escribe tu organización'; end if;
   if not coalesce(p_autoriza, false) then raise exception 'Necesitamos tu autorización para guardar tus datos'; end if;
-  insert into public.registros (nombre, correo, organizacion, autoriza)
-  values (v_nombre, v_correo, v_org, true)
-  on conflict (correo) do update
-    set nombre = excluded.nombre, organizacion = excluded.organizacion,
+  insert into public.participantes (id) values (p_participante) on conflict (id) do nothing;
+  insert into public.registros (participante, nombre, correo, organizacion, autoriza)
+  values (p_participante, v_nombre, v_correo, v_org, true)
+  on conflict (participante) do update
+    set nombre = excluded.nombre, correo = excluded.correo, organizacion = excluded.organizacion,
         autoriza = true, actualizado = now();
 end;
 $$;
@@ -340,7 +348,7 @@ begin
 end;
 $$;
 
--- Lista de registros para descargar. Solo con la clave del facilitador.
+-- Lista de registros para descargar (uno por correo). Solo con la clave del facilitador.
 create or replace function public.exportar_registros(p_clave text)
 returns table (nombre text, correo text, organizacion text, autoriza boolean, creado timestamptz)
 language plpgsql
@@ -351,8 +359,39 @@ as $$
 begin
   perform public._exigir_clave(p_clave);
   return query
-    select r.nombre, r.correo, r.organizacion, r.autoriza, r.creado
-    from public.registros r order by r.creado;
+    select t.nombre, t.correo, t.organizacion, t.autoriza, t.creado
+    from (select distinct on (r.correo) r.nombre, r.correo, r.organizacion, r.autoriza, r.creado
+          from public.registros r order by r.correo, r.actualizado desc) t
+    order by t.creado;
+end;
+$$;
+
+-- Todos los resultados con quién los dio (si se registró). Solo con la clave del facilitador.
+create or replace function public.exportar_resultados(p_clave text)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public, extensions
+as $$
+begin
+  perform public._exigir_clave(p_clave);
+  return jsonb_build_object(
+    'personas', coalesce((
+      select jsonb_agg(jsonb_build_object('participante', g.participante, 'nombre', g.nombre,
+                                          'correo', g.correo, 'organizacion', g.organizacion) order by g.creado)
+      from public.registros g where g.participante is not null), '[]'::jsonb),
+    'respuestas', coalesce((
+      select jsonb_agg(jsonb_build_object('participante', r.participante, 'actividad', r.actividad,
+                                          'datos', r.datos, 'actualizado', r.actualizado) order by r.actualizado)
+      from public.respuestas r), '[]'::jsonb),
+    'preguntas', coalesce((
+      select jsonb_agg(jsonb_build_object('participante', q.participante, 'texto', q.texto,
+                                          'respondida', q.respondida, 'oculta', q.oculta, 'creada', q.creada,
+                                          'votos', (select count(*) from public.votos_pregunta v where v.pregunta = q.id))
+                       order by q.creada)
+      from public.preguntas q), '[]'::jsonb)
+  );
 end;
 $$;
 
@@ -392,8 +431,9 @@ grant execute on function public.verificar_clave(text)               to anon, au
 grant execute on function public.cambiar_actividad(text, text)       to anon, authenticated;
 grant execute on function public.marcar_pregunta(text, bigint, boolean, boolean) to anon, authenticated;
 grant execute on function public.reiniciar_sesion(text)              to anon, authenticated;
-grant execute on function public.registrar(text, text, text, boolean) to anon, authenticated;
+grant execute on function public.registrar(uuid, text, text, text, boolean) to anon, authenticated;
 grant execute on function public.exportar_registros(text)            to anon, authenticated;
+grant execute on function public.exportar_resultados(text)           to anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- Clave del facilitador
