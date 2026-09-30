@@ -18,8 +18,8 @@ Son dos páginas:
 | Punto de partida | 3 · Encuesta | Cinco opciones | Barras con el porcentaje de cada etapa |
 | ¿Aislada o transformadora? | 12 · Votación A/B | Los dos casos y una razón opcional | Barra dividida A/B y las razones del grupo |
 | Ejercicio · 1. Nombre de la iniciativa | 24 · Ejercicio | Nombre y descripción opcional de su iniciativa, y botón Enviar | Instrucciones, un ejemplo y cuántas personas enviaron |
-| Ejercicio · 2. Impacto del negocio | 24 · Ejercicio | Los cinco criterios de la parte 1 (Sí, En parte, No), y botón Enviar | Los cinco criterios y cuántas personas enviaron |
-| Ejercicio · 3. Preparación de la organización | 24 · Ejercicio | Las seis capacidades de 1 a 5, su promedio y botón Enviar | Promedio del grupo por capacidad y la más baja, en vivo |
+| Ejercicio · 2. Preparación de la organización | 24 · Ejercicio | Las seis capacidades de 1 a 5, su promedio y botón Enviar | Promedio del grupo por capacidad y la más baja, en vivo |
+| Ejercicio · 3. Impacto del negocio | 24 · Ejercicio | Los cinco criterios de la parte 1 (Sí, En parte, No), y botón Enviar | Los cinco criterios y cuántas personas enviaron |
 | Ejercicio · 4. Resultados | 24 · Ejercicio | Su cuadrante, su punto en la matriz y el botón para publicarlo | Matriz 2×2 con las oportunidades de todo el grupo |
 | Tu siguiente paso | 25 · Cierre | Un compromiso para esta semana | Muro con los compromisos |
 | Preguntas del público | En cualquier momento | Botón "Preguntar" y votos | Preguntas ordenadas por votos |

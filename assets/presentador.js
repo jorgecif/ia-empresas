@@ -7,6 +7,7 @@
   const parteDe = id => (D.actividades.find(a => a.id === id) || {}).parte || '';
   const coma = n => n.toFixed(1).replace('.', ',');
   const PASOS = D.actividades.filter(a => a.ejercicio).sort((a, b) => a.ejercicio - b.ejercicio);
+  const numPaso = id => (D.actividades.find(a => a.id === id) || {}).ejercicio;
   const pasosEj = n => `<ol class="ej-pasos">${PASOS.map(p => `<li class="${p.ejercicio < n ? 'hecho' : p.ejercicio === n ? 'actual' : ''}">
     <span>${p.ejercicio}</span>${esc(p.nombre)}</li>`).join('')}</ol>`;
 
@@ -144,7 +145,7 @@
     // Ejercicio: pasos 1 y 2 muestran las instrucciones; el 3 y el 4, los resultados del grupo en vivo.
     iniciativa: {
       marco: () => encabezado('iniciativa', 'Nombre de la iniciativa', 'Piensa en una oportunidad concreta de IA para tu organización o la de un cliente.') + `<div class="e-cuerpo">
-          ${pasosEj(1)}
+          ${pasosEj(numPaso('iniciativa'))}
           <div class="ej-campos">
             <div><h3>Nombre</h3><p>Corto y concreto. Es lo que aparecerá en la matriz del grupo.</p></div>
             <div><h3>Descripción <small>opcional</small></h3><p>Qué hace, para quién y qué problema resuelve. No aparece en esta pantalla.</p></div>
@@ -157,7 +158,7 @@
 
     impacto: {
       marco: () => encabezado('impacto', 'Impacto del negocio', 'Evalúa tu iniciativa con los cinco criterios de la parte 1.') + `<div class="e-cuerpo">
-          ${pasosEj(2)}
+          ${pasosEj(numPaso('impacto'))}
           <ol class="ej-lista">${D.matriz.criterios.map((c, i) => `<li><b>${i + 1}</b>${esc(c.texto)}</li>`).join('')}</ol>
           <p class="ej-nota">Responde en tu celular <b>Sí</b>, <b>En parte</b> o <b>No</b>. Con eso se calcula el impacto, de 1 a 5.</p>
           <div id="pie"></div></div>`,
@@ -398,8 +399,8 @@
       return [...quien(pid),
         f.pulso ? opcion(f.pulso.opcion) : '', f.ab ? f.ab.opcion : '', f.ab ? f.ab.razon || '' : '',
         nombreIni, f.iniciativa ? f.iniciativa.descripcion || '' : '',
-        ...C5.map(c => f.impacto ? valor((f.impacto.criterios || {})[c.id]) : ''), dec(impacto),
         ...K.map(it => f.capacidades ? (f.capacidades.calificaciones || {})[it.id] : ''), dec(prep),
+        ...C5.map(c => f.impacto ? valor((f.impacto.criterios || {})[c.id]) : ''), dec(impacto),
         impacto != null && prep != null ? (Q[U.cuadrante(impacto, prep)] || {}).nombre : '', f.matriz ? 'Sí' : 'No',
         f.paso ? f.paso.texto : '', (f.preguntas || []).join(' | ')];
     })
@@ -417,8 +418,7 @@
       [n('Preparación de la organización'), n('Promedio (1 a 5)')],
       ...K.map((it, i) => [it.titulo, dec(promCap[i])]), ['Promedio general', dec(promGeneral)], ['Personas', cap.length], [],
       [n('Ejercicio: envíos por paso'), n('Personas')],
-      ['1. Nombre de la iniciativa', ini.length], ['2. Impacto del negocio', imp.length], ['3. Preparación de la organización', cap.length],
-      ['4. Publicadas en la matriz', mz.length], [],
+      ...PASOS.map(p => [p.id === 'matriz' ? `${p.ejercicio}. Publicadas en la matriz` : p.corto, de(p.id).length]), [],
       [n('Resultados del ejercicio'), n('Iniciativas')],
       ...Object.keys(Q).map(k => [Q[k].nombre, mz.filter(r => U.cuadrante(r.datos.impacto, r.datos.preparacion) === k).length]), ['Total', mz.length], [],
       [n('Cierre'), n('Cantidad')], ['Compromisos (siguiente paso)', paso.length], ['Preguntas del público', preguntas.length]
@@ -426,9 +426,9 @@
     const A3 = [28, 30, 26];
     return [
       { nombre: 'Resumen', anchos: [42, 14, 14], filas: resumen },
-      { nombre: 'Por persona', anchos: [...A3, 16, 10, 50, 40, 60, ...C5.map(() => 14), 10, ...K.map(() => 14), 12, 22, 14, 60, 60],
+      { nombre: 'Por persona', anchos: [...A3, 16, 10, 50, 40, 60, ...K.map(() => 14), 12, ...C5.map(() => 14), 10, 22, 14, 60, 60],
         filas: [[...QUIEN, n('Punto de partida'), n('Voto A/B'), n('Razón'), n('Iniciativa'), n('Descripción'),
-                 ...C5.map(c => n(c.texto)), n('Impacto (1 a 5)'), ...K.map(it => n(it.titulo)), n('Preparación (1 a 5)'),
+                 ...K.map(it => n(it.titulo)), n('Preparación (1 a 5)'), ...C5.map(c => n(c.texto)), n('Impacto (1 a 5)'),
                  n('Cuadrante'), n('Publicada en la matriz'), n('Siguiente paso'), n('Preguntas')], ...filasPersona] },
       { nombre: 'Encuesta', anchos: [...A3, 18], filas: [[...QUIEN, n('Punto de partida')], ...pulso.map(r => [...quien(r.participante), opcion(r.datos.opcion)])] },
       { nombre: 'Votación A-B', anchos: [...A3, 8, 80], filas: [[...QUIEN, n('Voto'), n('Razón')], ...ab.map(r => [...quien(r.participante), r.datos.opcion, r.datos.razon || ''])] },

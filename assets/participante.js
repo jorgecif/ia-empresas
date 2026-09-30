@@ -203,9 +203,10 @@
     return true;
   }
 
-  const cabeceraEj = n => `<p class="p-parte">Ejercicio · Paso ${n} de 4</p>
-    <h1 class="p-titulo">${esc(PASOS[n - 1].nombre)}</h1>
-    <ol class="pasos-ej" aria-hidden="true">${PASOS.map((p, i) => `<li class="${i + 1 < n ? 'hecho' : i + 1 === n ? 'actual' : ''}"></li>`).join('')}</ol>`;
+  // El número de cada paso sale de datos.js (campo "ejercicio").
+  const cabeceraEj = id => { const n = actDe(id).ejercicio; return `<p class="p-parte">Ejercicio · Paso ${n} de ${PASOS.length}</p>
+    <h1 class="p-titulo">${esc(actDe(id).nombre)}</h1>
+    <ol class="pasos-ej" aria-hidden="true">${PASOS.map((p, i) => `<li class="${i + 1 < n ? 'hecho' : i + 1 === n ? 'actual' : ''}"></li>`).join('')}</ol>`; };
   const pieEnvio = `<div class="acciones"><button class="boton ancho" id="enviar-paso" type="button">Enviar</button></div>
     <p class="aviso" id="listo" aria-live="polite" hidden></p>`;
 
@@ -244,7 +245,7 @@
 
   vistas.iniciativa = () => {
     const b = ejercicio();
-    escenario.innerHTML = cabeceraEj(1) + `
+    escenario.innerHTML = cabeceraEj('iniciativa') + `
       <p class="p-ayuda">Piensa en una oportunidad concreta de IA para tu organización o la de un cliente.</p>
       <label class="campo"><span>Nombre de la iniciativa</span>
         <input type="text" id="oportunidad" maxlength="80" value="${esc(b.oportunidad)}" placeholder="Por ejemplo: alertas tempranas de deserción">
@@ -260,7 +261,7 @@
 
   vistas.impacto = () => {
     const P = D.matriz, b = ejercicio();
-    escenario.innerHTML = cabeceraEj(2) + `
+    escenario.innerHTML = cabeceraEj('impacto') + `
       <p class="p-ayuda">${b.oportunidad.trim() ? `<b>${esc(b.oportunidad)}</b>: evalúa` : 'Evalúa'} su impacto con los cinco criterios de la parte 1.</p>
       ${b.oportunidad.trim() ? '' : '<p class="aviso">Aún no has escrito el nombre de tu iniciativa. <button type="button" class="enlace" data-ir-paso="iniciativa">Ir al paso 1</button></p>'}
       ${P.criterios.map(c => `<div class="criterio" role="group" aria-labelledby="k-${c.id}"><p id="k-${c.id}">${esc(c.texto)}</p>
@@ -279,7 +280,7 @@
     const K = D.capacidades, b = ejercicio();
     if (!b.calificaciones) b.calificaciones = Object.assign({}, (mis.capacidades || {}).calificaciones || {});
     const cal = b.calificaciones;
-    escenario.innerHTML = cabeceraEj(3) + `
+    escenario.innerHTML = cabeceraEj('capacidades') + `
       <p class="p-ayuda"><b>${esc(K.pregunta)}</b> ${esc(K.ayuda)} El promedio es el eje de preparación de la matriz.</p>
       ${K.items.map(it => `<div class="escala-item" role="group" aria-labelledby="c-${it.id}">
         <h3 id="c-${it.id}">${esc(it.titulo)}</h3><p>${esc(it.desc)}</p>
@@ -305,11 +306,10 @@
   vistas.matriz = () => {
     const P = D.matriz, b = ejercicio();
     const faltan = [];
-    if (!b.oportunidad.trim()) faltan.push('iniciativa');
-    if (!impactoCompleto(b)) faltan.push('impacto');
-    if (!autoevaluacion(b)) faltan.push('capacidades');
+    const completo = { iniciativa: () => !!b.oportunidad.trim(), capacidades: () => !!autoevaluacion(b), impacto: () => impactoCompleto(b) };
+    PASOS.forEach(p => { if (completo[p.id] && !completo[p.id]()) faltan.push(p.id); });   // en el orden del ejercicio
     if (faltan.length) {
-      escenario.innerHTML = cabeceraEj(4) + `
+      escenario.innerHTML = cabeceraEj('matriz') + `
         <p class="p-ayuda">Para ver dónde queda tu iniciativa, completa primero:</p>
         <ul class="lista-act">${faltan.map(id => `<li><button type="button" data-ir-paso="${id}"><span>${esc(etiqueta(id))}</span><span aria-hidden="true">→</span></button></li>`).join('')}</ul>`;
       conectarPasos();
@@ -317,7 +317,7 @@
     }
     const r = calcular(b), Q = P.cuadrantes[r.cuadrante];
     const x = ((r.preparacion - 1) / 4) * 100, y = ((r.impacto - 1) / 4) * 100;
-    escenario.innerHTML = cabeceraEj(4) + `
+    escenario.innerHTML = cabeceraEj('matriz') + `
       <p class="p-ayuda"><b>${esc(b.oportunidad)}</b></p>
       <div class="veredicto ${r.cuadrante}"><h3>${esc(Q.nombre)}</h3><p>${esc(Q.consejo)}</p>
         <div class="cifras"><span><b>${coma(r.impacto)}</b>impacto</span><span><b>${coma(r.preparacion)}</b>preparación</span></div></div>
