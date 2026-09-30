@@ -454,6 +454,13 @@
   async function sincronizar() {
     try {
       const e = await A.estado();
+      // Los facilitadores pulsaron "Borrar respuestas": este celular olvida respuestas y registro.
+      if (e.reinicio && e.reinicio !== mis.reinicio) {
+        const primeraVez = !mis.reinicio;
+        if (!primeraVez) { Object.keys(mis).forEach(k => delete mis[k]); Object.keys(borradorReg).forEach(k => delete borradorReg[k]); editandoReg = false; }
+        mis.reinicio = e.reinicio; guardarMis();
+        if (!primeraVez) { vivo = null; vista = null; A.unirse(pid).catch(() => {}); }
+      }
       indicador.className = 'en-vivo' + (A.modo === 'demo' ? ' demo' : '');
       indicador.textContent = A.modo === 'demo' ? 'Modo demo' : 'En vivo';
       if (e.actividad !== vivo) {

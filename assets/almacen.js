@@ -39,7 +39,7 @@
     return {
       modo: 'supabase',
       async estado() {
-        const r = await fetch(`${base}/rest/v1/estado_sesion?id=eq.1&select=actividad,actualizado`, { headers });
+        const r = await fetch(`${base}/rest/v1/estado_sesion?id=eq.1&select=*`, { headers });
         if (!r.ok) throw new Error('No se pudo leer el estado (' + r.status + ')');
         const filas = await r.json();
         return filas[0] || { actividad: 'espera' };
@@ -65,7 +65,7 @@
   // ------------------------------------------------------------------ Modo demo (localStorage)
   function crearDemo() {
     const LLAVE = 'iae_demo';
-    const vacio = () => ({ actividad: 'espera', participantes: [], respuestas: {}, preguntas: [], votos: [], registros: [], sig: 1 });
+    const vacio = () => ({ actividad: 'espera', participantes: [], respuestas: {}, preguntas: [], votos: [], registros: [], sig: 1, reinicio: new Date().toISOString() });
     const leer = () => { try { return JSON.parse(localStorage.getItem(LLAVE)) || vacio(); } catch (e) { return vacio(); } };
     const guardar = d => localStorage.setItem(LLAVE, JSON.stringify(d));
     const unir = (d, pid) => { if (!d.participantes.includes(pid)) d.participantes.push(pid); };
@@ -105,6 +105,7 @@
         d.preguntas.push({ id: d.sig++, participante: 'demo-' + i, texto: q, respondida: false, oculta: false, creada: Date.now() - i * 1000 });
         for (let v = 0; v < 4 - i; v++) d.votos.push([d.sig - 1, 'demo-' + (v + 5)]);
       });
+      d.reinicio = leer().reinicio;
       const orgs = ['Universidad de los Andes', 'Banco del Sur', 'Flores de la Sabana', 'Cancillería', 'Logística Andina'];
       d.registros = (leer().registros || []).concat(Array.from({ length: 16 }, (_, i) => ({
         participante: 'demo-' + i, nombre: 'Persona de ejemplo ' + (i + 1), correo: `persona${i + 1}@ejemplo.com`,
@@ -115,7 +116,7 @@
 
     return {
       modo: 'demo',
-      async estado() { return { actividad: leer().actividad }; },
+      async estado() { const d = leer(); return { actividad: d.actividad, reinicio: d.reinicio }; },
       async unirse(pid) { const d = leer(); unir(d, pid); guardar(d); },
       async responder(pid, act, datos) {
         const d = leer(); unir(d, pid);
@@ -162,7 +163,7 @@
         if (q) { if (respondida !== null) q.respondida = respondida; if (oculta !== null) q.oculta = oculta; }
         guardar(d);
       },
-      async reiniciar() { const r = leer().registros || []; const d = vacio(); d.registros = r; guardar(d); },   // los registros se conservan
+      async reiniciar() { guardar(vacio()); },
       async registrar(pid, r) {
         const d = leer(); unir(d, pid);
         d.registros = (d.registros || []).filter(x => x.participante !== pid);

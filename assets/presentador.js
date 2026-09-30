@@ -398,7 +398,7 @@
   });
 
   $('#btn-reiniciar').onclick = () => {
-    if (!confirm('Esto borra todas las respuestas, preguntas y participantes, y vuelve a la sala de espera. Los registros (nombre, correo, organización) se conservan. ¿Continuar?')) return;
+    if (!confirm('Esto borra todas las respuestas, preguntas, participantes y registros (nombre, correo y organización), y vuelve a la sala de espera. No se puede deshacer: si necesitas los datos, pulsa antes "Descargar resultados". ¿Continuar?')) return;
     conClave(async k => { await A.reiniciar(k); await refrescar('redibujar'); });
   };
   if (A.modo === 'demo') {

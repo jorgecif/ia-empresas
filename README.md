@@ -104,7 +104,7 @@ Los colores y la tipografía siguen la plantilla de la universidad y están al i
 - **La clave del facilitador** se guarda cifrada en la base de datos y se necesita para cambiar la actividad, marcar preguntas y borrar respuestas.
 - **Las tablas no se pueden leer ni modificar directamente.** Todo pasa por funciones que validan los datos y limitan su tamaño.
 - Cualquier persona con el enlace puede responder. Para una sesión con inscripción previa es suficiente, pero no uses estas herramientas para recoger información sensible.
-- Después de la sesión, descarga los resultados y pulsa **Borrar respuestas**. Ese botón **no** borra los registros; para borrarlos, ejecuta `delete from public.registros;` en el SQL Editor o elimina el proyecto de Supabase si ya no lo necesitas.
+- **Borrar respuestas** borra todo: respuestas, preguntas, participantes y registros, y los celulares que ya estaban conectados empiezan de cero. No se puede deshacer: después de la sesión, descarga primero los resultados. Si ya no necesitas el proyecto, elimínalo de Supabase.
 
 ## Costos y límites
 

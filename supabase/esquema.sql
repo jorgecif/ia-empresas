@@ -24,8 +24,10 @@ create extension if not exists pgcrypto with schema extensions;
 create table if not exists public.estado_sesion (
   id          int primary key default 1 check (id = 1),
   actividad   text not null default 'espera',
-  actualizado timestamptz not null default now()
+  actualizado timestamptz not null default now(),
+  reinicio    timestamptz not null default now()
 );
+alter table public.estado_sesion add column if not exists reinicio timestamptz not null default now();
 insert into public.estado_sesion (id) values (1) on conflict (id) do nothing;
 
 create table if not exists public.clave_facilitador (
@@ -395,8 +397,9 @@ begin
 end;
 $$;
 
--- Borra todas las respuestas, preguntas y participantes. Úsala antes de la sesión.
--- Los registros (nombre, correo, organización) se conservan: descárgalos desde el presentador.
+-- Borra todas las respuestas, preguntas, participantes y registros, y vuelve a la sala de espera.
+-- Úsala antes de la sesión. Descarga antes los resultados si los necesitas.
+-- La marca "reinicio" avisa a los celulares que deben empezar de cero.
 create or replace function public.reiniciar_sesion(p_clave text)
 returns void
 language plpgsql
@@ -408,8 +411,9 @@ begin
   delete from public.votos_pregunta where true;
   delete from public.preguntas where true;
   delete from public.respuestas where true;
+  delete from public.registros where true;
   delete from public.participantes where true;
-  update public.estado_sesion set actividad = 'espera', actualizado = now() where id = 1;
+  update public.estado_sesion set actividad = 'espera', actualizado = now(), reinicio = now() where id = 1;
 end;
 $$;
 
