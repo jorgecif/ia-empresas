@@ -46,7 +46,7 @@ window.DATOS = {
     pregunta: '¿Qué tan preparada está tu organización?',
     ayuda: 'Califica cada capacidad de 1 (incipiente) a 5 (consolidada).',
     items: [
-      { id: 'liderazgo', titulo: 'Liderazgo y patrocinio',        desc: 'Directivos que definen prioridades y responden por los resultados.' },
+      { id: 'liderazgo', titulo: 'Estrategia, liderazgo y patrocinio',        desc: 'Directivos que definen prioridades y responden por los resultados.' },
       { id: 'talento',   titulo: 'Talento y alfabetización en IA', desc: 'Equipos que entienden qué puede y qué no puede hacer la IA.' },
       { id: 'cambio',    titulo: 'Adopción y gestión del cambio',  desc: 'Se gestiona la resistencia y se acompaña a las personas.' },
       { id: 'datos',     titulo: 'Datos disponibles y confiables', desc: 'Los datos existen, son de calidad y se pueden usar.' },
