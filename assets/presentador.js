@@ -100,25 +100,12 @@
       datos: '__organizaciones',
       actualizar: orgs => {
         const personas = orgs.reduce((s, o) => s + o.personas, 0), caja = $('#orgs');
-        // El contador va primero: ocupa espacio y cambia cuántas organizaciones caben.
         $('#pie').innerHTML = `<p class="e-cuenta">${personas} ${personas === 1 ? 'persona registrada' : 'personas registradas'} · ${orgs.length} ${orgs.length === 1 ? 'organización' : 'organizaciones'}</p>`;
-        caja.dataset.tam = orgs.length <= 8 ? 'grande' : orgs.length <= 20 ? 'media' : orgs.length > 30 ? 'chica' : '';
         // Las más recientes primero, para que quien se acaba de registrar vea la suya.
         caja.innerHTML = orgs.length
-          ? orgs.slice().reverse().map(o => `<span class="${nuevo('o' + o.organizacion.toLowerCase()).trim()}">${esc(o.organizacion)}${o.personas > 1 ? `<b>${o.personas}</b>` : ''}</span>`).join('') +
-            '<span class="mas" hidden></span>'
+          ? orgs.slice().reverse().map(o => `<span class="${nuevo('o' + o.organizacion.toLowerCase()).trim()}">${esc(o.organizacion)}${o.personas > 1 ? `<b>${o.personas}</b>` : ''}</span>`).join('')
           : '<div class="vacio">Las organizaciones aparecerán aquí a medida que la gente se registre.</div>';
-        // Si no caben todas, las más antiguas se resumen en "y N más".
-        // Se mide con offsetTop (sin la animación de entrada, que las muestra un poco más pequeñas).
-        const alto = caja.clientHeight, mas = caja.querySelector('.mas');
-        const chips = [...caja.querySelectorAll('span:not(.mas)')];
-        let ocultas = 0;
-        const sobra = el => el.offsetTop + el.offsetHeight > alto;
-        while (chips.length && sobra(chips[chips.length - 1])) { chips.pop().remove(); ocultas++; }
-        if (ocultas && mas) {
-          mas.hidden = false;
-          do { mas.textContent = `y ${ocultas} más`; } while (sobra(mas) && chips.length && (chips.pop().remove(), ++ocultas));
-        }
+        ajustarOrgs();
       }
     },
 
@@ -286,6 +273,33 @@
       datos: null
     }
   };
+
+  // Registro: busca la letra más grande con la que caben todas las organizaciones.
+  // Si ni con la mínima caben, el área se puede desplazar. Se mide con offsetTop
+  // (sin la animación de entrada, que las muestra un poco más pequeñas).
+  function ajustarOrgs() {
+    const caja = $('#orgs'); if (!caja) return;
+    const chips = [...caja.querySelectorAll('span')];
+    caja.classList.remove('desplazable');
+    if (!chips.length) return;
+    const cabe = () => chips.every(c => c.offsetTop + c.offsetHeight <= caja.clientHeight);
+    const probar = px => { caja.style.setProperty('--tam', px + 'px'); return cabe(); };
+    const min = 12, max = Math.max(min, Math.min(46, innerWidth * 0.026));
+    if (probar(max)) return;
+    if (!probar(min)) { caja.classList.add('desplazable'); return; }
+    let bajo = min, alto = max;
+    while (alto - bajo > 0.5) { const medio = (bajo + alto) / 2; if (probar(medio)) bajo = medio; else alto = medio; }
+    probar(bajo);
+  }
+  // Al cambiar el tamaño del área (pantalla completa, ocultar el panel) se vuelve a ajustar.
+  if (window.ResizeObserver) {
+    let ancho = 0, altoCaja = 0;
+    new ResizeObserver(() => {
+      const caja = $('#orgs'); if (!caja) return;
+      if (caja.clientWidth === ancho && caja.clientHeight === altoCaja) return;
+      ancho = caja.clientWidth; altoCaja = caja.clientHeight; ajustarOrgs();
+    }).observe(escena);
+  }
 
   // Mueve la etiqueta de un punto hasta que no choque con las ya ubicadas.
   function acomodar(el, puestos, marco) {
