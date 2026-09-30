@@ -13,7 +13,7 @@ Son dos páginas:
 
 | Actividad | Diapositiva | Qué ve el participante | Qué se proyecta |
 | --- | --- | --- | --- |
-| Sala de espera | Portada y agenda | Mensaje de bienvenida | Título, QR grande y número de personas conectadas |
+| Sala de espera | Portada y agenda | Bienvenida y formulario de registro (nombre, correo, organización y autorización) | Título, QR grande y número de personas conectadas |
 | Punto de partida | 3 · Encuesta | Cinco opciones | Barras con el porcentaje de cada etapa |
 | ¿Aislada o transformadora? | 12 · Votación A/B | Los dos casos y una razón opcional | Barra dividida A/B y las razones del grupo |
 | Ejercicio · 1. Nombre de la iniciativa | 24 · Ejercicio | Nombre y descripción opcional de su iniciativa | Instrucciones y un ejemplo |
@@ -97,12 +97,14 @@ Los colores y la tipografía siguen la plantilla de la universidad y están al i
 
 ## Seguridad y privacidad
 
-- **No se piden nombres ni correos.** Cada celular recibe un identificador aleatorio que solo sirve para no contar dos veces la misma respuesta.
+- **Registro separado de las respuestas.** En la sala de espera se piden nombre, correo y organización, con una casilla de autorización (el texto está en `assets/datos.js`; revísalo con la política de datos de la universidad). Esos datos se guardan en una tabla aparte, **sin** el identificador del celular, así que no se pueden cruzar con las respuestas. Quien llegue tarde puede registrarse desde "Actividades → Mis datos", y quien no lo haya hecho lo ve de nuevo en "Gracias".
+- **Solo los facilitadores descargan los registros**, con el botón **Descargar registros** del presentador (pide la clave). Sale un CSV listo para Excel.
+- Cada celular recibe un identificador aleatorio que solo sirve para no contar dos veces la misma respuesta.
 - **Qué se publica en la pantalla:** los porcentajes, las razones de la votación A/B, el nombre de la oportunidad y su ubicación en la matriz, el promedio del grupo por capacidad y los siguientes pasos. La descripción de la iniciativa nunca sale del celular.
 - **La clave del facilitador** se guarda cifrada en la base de datos y se necesita para cambiar la actividad, marcar preguntas y borrar respuestas.
 - **Las tablas no se pueden leer ni modificar directamente.** Todo pasa por funciones que validan los datos y limitan su tamaño.
 - Cualquier persona con el enlace puede responder. Para una sesión con inscripción previa es suficiente, pero no uses estas herramientas para recoger información sensible.
-- Después de la sesión, pulsa **Borrar respuestas** o elimina el proyecto de Supabase si ya no lo necesitas.
+- Después de la sesión, descarga los registros y pulsa **Borrar respuestas**. Ese botón **no** borra los registros; para borrarlos, ejecuta `delete from public.registros;` en el SQL Editor o elimina el proyecto de Supabase si ya no lo necesitas.
 
 ## Costos y límites
 

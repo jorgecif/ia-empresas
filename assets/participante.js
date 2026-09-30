@@ -43,13 +43,55 @@
   // --------------------------------------------------------- vistas
   const vistas = {};
 
+  // --------------------------------------------------------- registro (nombre, correo, organización)
+  // Se guarda aparte de las respuestas, sin el identificador del participante.
+  const borradorReg = {};   // lo escrito se conserva si la actividad cambia antes de enviar
+  const correoValido = c => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(c);
+  let editandoReg = false;
+  function htmlRegistro() {
+    const R = D.registro, r = mis.registro;
+    if (r && !editandoReg) return `<section class="registro hecho" id="registro">
+        <p>Gracias, <b>${esc(r.nombre)}</b>. <button type="button" class="enlace" id="r-editar">Editar mis datos</button></p></section>`;
+    const v = Object.assign({}, r || {}, borradorReg);
+    return `<section class="registro" id="registro" aria-labelledby="r-titulo">
+      <h2 id="r-titulo">${esc(R.titulo)}</h2>
+      <label class="campo"><span>Nombre</span><input id="r-nombre" type="text" autocomplete="name" maxlength="120" value="${esc(v.nombre || '')}"></label>
+      <label class="campo"><span>Correo</span><input id="r-correo" type="email" inputmode="email" autocomplete="email" maxlength="160" value="${esc(v.correo || '')}"></label>
+      <label class="campo"><span>Organización</span><input id="r-organizacion" type="text" autocomplete="organization" maxlength="160" value="${esc(v.organizacion || '')}"></label>
+      <label class="check"><input type="checkbox" id="r-autoriza" ${r || v.autoriza ? 'checked' : ''}><span>${esc(R.autorizacion)}</span></label>
+      <button class="boton ancho" id="r-enviar" type="button">Enviar mis datos</button>
+      <p class="nota">${esc(R.ayuda)}</p></section>`;
+  }
+  function conectarRegistro(repintar) {
+    const ed = $('#r-editar'); if (ed) ed.onclick = () => { editandoReg = true; repintar(); };
+    const env = $('#r-enviar'); if (!env) return;
+    ['nombre', 'correo', 'organizacion'].forEach(k => $('#r-' + k).oninput = e => { borradorReg[k] = e.target.value; });
+    $('#r-autoriza').onchange = e => { borradorReg.autoriza = e.target.checked; };
+    env.onclick = async () => {
+      const datos = { nombre: $('#r-nombre').value.trim(), correo: $('#r-correo').value.trim().toLowerCase(),
+                      organizacion: $('#r-organizacion').value.trim(), autoriza: $('#r-autoriza').checked };
+      if (datos.nombre.length < 2) return brindis('Escribe tu nombre.');
+      if (!correoValido(datos.correo)) return brindis('Revisa tu correo.');
+      if (datos.organizacion.length < 2) return brindis('Escribe tu organización.');
+      if (!datos.autoriza) return brindis('Marca la autorización para enviar tus datos.');
+      env.disabled = true;
+      try {
+        await A.registrar(datos);
+        mis.registro = { nombre: datos.nombre, correo: datos.correo, organizacion: datos.organizacion }; guardarMis();
+        editandoReg = false; brindis('Datos enviados. ¡Gracias!'); repintar();
+      } catch (e) { env.disabled = false; fallo(e); }
+    };
+  }
+
   vistas.espera = () => {
     escenario.innerHTML = `
       <p class="p-parte">${esc(C.SUBTITULO || '')}</p>
       <h1 class="p-titulo">Ya estás dentro</h1>
       <p class="p-ayuda">Cuando los facilitadores abran una actividad, aparecerá aquí sola. No necesitas recargar la página.</p>
+      ${htmlRegistro()}
       <ol class="espera-lista">${[...new Set(ACTS.map(a => a.ejercicio ? 'Prioriza tu oportunidad' : a.nombre))]
         .map((t, i) => `<li><span>${i + 1}</span>${esc(t)}</li>`).join('')}</ol>`;
+    conectarRegistro(vistas.espera);
   };
 
   vistas.pulso = () => {
@@ -306,9 +348,11 @@
     escenario.innerHTML = `<p class="p-parte">Cierre</p>
       <h1 class="p-titulo">Gracias por participar</h1>
       <p class="p-ayuda">Descarga tu ficha con la oportunidad que priorizaste, tu autoevaluación y tu siguiente paso.</p>
+      ${mis.registro ? '' : htmlRegistro()}
       <div class="acciones"><button class="boton" id="ficha-btn" type="button">Descargar mi ficha</button></div>
       <p class="p-ayuda" style="margin-top:2rem">Conoce más programas en <a href="https://educacioncontinua.uniandes.edu.co" target="_blank" rel="noopener">educacioncontinua.uniandes.edu.co</a>.</p>`;
     $('#ficha-btn').onclick = imprimirFicha;
+    conectarRegistro(vistas.fin);
   };
 
   function mostrar(act) {
@@ -372,7 +416,8 @@
     return !!mis[id];
   }
   $('#btn-actividades').onclick = () => {
-    $('#lista-act').innerHTML = ACTS.map(a => {
+    $('#lista-act').innerHTML = `<li><button type="button" data-ir="espera"><span>Mis datos</span>
+        ${mis.registro ? '<span class="listo">Enviados</span>' : ''}</button></li>` + ACTS.map(a => {
       const hecho = hechaActividad(a.id);
       return `<li><button type="button" data-ir="${a.id}"><span>${esc(etiqueta(a.id))}</span>
         ${a.id === vivo ? '<span class="vivo">En vivo</span>' : hecho ? '<span class="listo">Respondida</span>' : ''}</button></li>`;
@@ -386,7 +431,8 @@
   function imprimirFicha() {
     const b = mis.matriz || {}, P = D.matriz, cap = autoevaluacion(b);
     const fecha = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
-    let html = `<div class="ficha-cab"><h1>${esc(C.TITULO)}</h1><p>${esc(C.SUBTITULO || '')} · ${fecha}</p></div>`;
+    const quien = mis.registro ? `<p class="ficha-quien">${esc(mis.registro.nombre)} · ${esc(mis.registro.organizacion)}</p>` : '';
+    let html = `<div class="ficha-cab"><h1>${esc(C.TITULO)}</h1><p>${esc(C.SUBTITULO || '')} · ${fecha}</p>${quien}</div>`;
     if (b.oportunidad) {
       const r = calcular(b), Q = P.cuadrantes[r.cuadrante];
       html += `<h2>Iniciativa priorizada</h2><p><b>${esc(b.oportunidad)}</b></p>

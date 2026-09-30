@@ -65,6 +65,7 @@
   // ------------------------------------------------------------ riel
   function pintarRiel() {
     $('#n-part').textContent = resumen.participantes || 0;
+    $('#n-reg').textContent = resumen.registros || 0;
     $('#riel-lista').innerHTML = D.actividades.map(a => {
       const n = a.id === 'preguntas' ? resumen.preguntas : (resumen.respuestas || {})[a.id];
       return `<li><button type="button" data-act="${a.id}" aria-current="${a.id === vivo}">
@@ -307,8 +308,23 @@
     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
     else document.exitFullscreen();
   }
+  // Registros (nombre, correo, organización) en CSV para Excel en español: separador ";" y BOM UTF-8.
+  $('#btn-registros').onclick = () => conClave(async k => {
+    const filas = await A.exportarRegistros(k);
+    if (!filas.length) { alert('Aún no hay registros.'); return; }
+    // Evita que Excel interprete como fórmula un valor que empiece por = + - @
+    const campo = v => '"' + String(v == null ? '' : v).replace(/^([=+\-@])/, "'$1").replace(/"/g, '""') + '"';
+    const lineas = [['Nombre', 'Correo', 'Organización', 'Autoriza contacto', 'Fecha'].map(campo).join(';')]
+      .concat(filas.map(f => [f.nombre, f.correo, f.organizacion, f.autoriza ? 'Sí' : 'No',
+        new Date(f.creado).toLocaleString('es-CO')].map(campo).join(';')));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+    a.download = `registros-ia-empresas-${new Date().toLocaleDateString('sv-SE')}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
   $('#btn-reiniciar').onclick = () => {
-    if (!confirm('Esto borra todas las respuestas, preguntas y participantes, y vuelve a la sala de espera. ¿Continuar?')) return;
+    if (!confirm('Esto borra todas las respuestas, preguntas y participantes, y vuelve a la sala de espera. Los registros (nombre, correo, organización) se conservan. ¿Continuar?')) return;
     conClave(async k => { await A.reiniciar(k); await refrescar('redibujar'); });
   };
   if (A.modo === 'demo') {

@@ -55,6 +55,18 @@ create table if not exists public.preguntas (
   creada       timestamptz not null default now()
 );
 
+-- Registro de asistentes (nombre, correo, organización). A propósito NO guarda el
+-- identificador del participante: así las respuestas siguen siendo anónimas.
+create table if not exists public.registros (
+  id           bigint generated always as identity primary key,
+  nombre       text not null,
+  correo       text not null unique,
+  organizacion text not null,
+  autoriza     boolean not null default false,
+  creado       timestamptz not null default now(),
+  actualizado  timestamptz not null default now()
+);
+
 create table if not exists public.votos_pregunta (
   pregunta     bigint not null references public.preguntas(id) on delete cascade,
   participante uuid   not null references public.participantes(id) on delete cascade,
@@ -71,6 +83,7 @@ alter table public.participantes     enable row level security;
 alter table public.respuestas        enable row level security;
 alter table public.preguntas         enable row level security;
 alter table public.votos_pregunta    enable row level security;
+alter table public.registros         enable row level security;
 
 drop policy if exists "estado de lectura publica" on public.estado_sesion;
 create policy "estado de lectura publica" on public.estado_sesion
@@ -81,6 +94,7 @@ revoke all on public.participantes     from anon, authenticated;
 revoke all on public.respuestas        from anon, authenticated;
 revoke all on public.preguntas         from anon, authenticated;
 revoke all on public.votos_pregunta    from anon, authenticated;
+revoke all on public.registros         from anon, authenticated;
 revoke insert, update, delete on public.estado_sesion from anon, authenticated;
 grant select on public.estado_sesion to anon, authenticated;
 
@@ -184,8 +198,33 @@ as $$
       select jsonb_object_agg(actividad, n)
       from (select actividad, count(*) as n from public.respuestas group by actividad) t
     ), '{}'::jsonb),
-    'preguntas', (select count(*) from public.preguntas where not oculta and not respondida)
+    'preguntas', (select count(*) from public.preguntas where not oculta and not respondida),
+    'registros', (select count(*) from public.registros)
   );
+$$;
+
+-- Guarda o actualiza (por correo) el registro de una persona.
+create or replace function public.registrar(p_nombre text, p_correo text, p_organizacion text, p_autoriza boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_nombre text := left(btrim(coalesce(p_nombre, '')), 120);
+  v_correo text := lower(left(btrim(coalesce(p_correo, '')), 160));
+  v_org    text := left(btrim(coalesce(p_organizacion, '')), 160);
+begin
+  if char_length(v_nombre) < 2 then raise exception 'Escribe tu nombre'; end if;
+  if v_correo !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then raise exception 'Revisa tu correo'; end if;
+  if char_length(v_org) < 2 then raise exception 'Escribe tu organización'; end if;
+  if not coalesce(p_autoriza, false) then raise exception 'Necesitamos tu autorización para guardar tus datos'; end if;
+  insert into public.registros (nombre, correo, organizacion, autoriza)
+  values (v_nombre, v_correo, v_org, true)
+  on conflict (correo) do update
+    set nombre = excluded.nombre, organizacion = excluded.organizacion,
+        autoriza = true, actualizado = now();
+end;
 $$;
 
 create or replace function public.preguntar(p_participante uuid, p_texto text)
@@ -301,7 +340,24 @@ begin
 end;
 $$;
 
+-- Lista de registros para descargar. Solo con la clave del facilitador.
+create or replace function public.exportar_registros(p_clave text)
+returns table (nombre text, correo text, organizacion text, autoriza boolean, creado timestamptz)
+language plpgsql
+stable
+security definer
+set search_path = public, extensions
+as $$
+begin
+  perform public._exigir_clave(p_clave);
+  return query
+    select r.nombre, r.correo, r.organizacion, r.autoriza, r.creado
+    from public.registros r order by r.creado;
+end;
+$$;
+
 -- Borra todas las respuestas, preguntas y participantes. Úsala antes de la sesión.
+-- Los registros (nombre, correo, organización) se conservan: descárgalos desde el presentador.
 create or replace function public.reiniciar_sesion(p_clave text)
 returns void
 language plpgsql
@@ -336,6 +392,8 @@ grant execute on function public.verificar_clave(text)               to anon, au
 grant execute on function public.cambiar_actividad(text, text)       to anon, authenticated;
 grant execute on function public.marcar_pregunta(text, bigint, boolean, boolean) to anon, authenticated;
 grant execute on function public.reiniciar_sesion(text)              to anon, authenticated;
+grant execute on function public.registrar(text, text, text, boolean) to anon, authenticated;
+grant execute on function public.exportar_registros(text)            to anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- Clave del facilitador

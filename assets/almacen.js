@@ -55,14 +55,16 @@
       cambiarActividad: (clave, act) => rpc('cambiar_actividad', { p_clave: clave, p_actividad: act }),
       marcarPregunta: (clave, id, respondida, oculta) =>
         rpc('marcar_pregunta', { p_clave: clave, p_pregunta: id, p_respondida: respondida, p_oculta: oculta }),
-      reiniciar: clave => rpc('reiniciar_sesion', { p_clave: clave })
+      reiniciar: clave => rpc('reiniciar_sesion', { p_clave: clave }),
+      registrar: r => rpc('registrar', { p_nombre: r.nombre, p_correo: r.correo, p_organizacion: r.organizacion, p_autoriza: r.autoriza }),
+      async exportarRegistros(clave) { return await rpc('exportar_registros', { p_clave: clave }) || []; }
     };
   }
 
   // ------------------------------------------------------------------ Modo demo (localStorage)
   function crearDemo() {
     const LLAVE = 'iae_demo';
-    const vacio = () => ({ actividad: 'espera', participantes: [], respuestas: {}, preguntas: [], votos: [], sig: 1 });
+    const vacio = () => ({ actividad: 'espera', participantes: [], respuestas: {}, preguntas: [], votos: [], registros: [], sig: 1 });
     const leer = () => { try { return JSON.parse(localStorage.getItem(LLAVE)) || vacio(); } catch (e) { return vacio(); } };
     const guardar = d => localStorage.setItem(LLAVE, JSON.stringify(d));
     const unir = (d, pid) => { if (!d.participantes.includes(pid)) d.participantes.push(pid); };
@@ -102,7 +104,7 @@
         d.preguntas.push({ id: d.sig++, participante: 'demo-' + i, texto: q, respondida: false, oculta: false, creada: Date.now() - i * 1000 });
         for (let v = 0; v < 4 - i; v++) d.votos.push([d.sig - 1, 'demo-' + (v + 5)]);
       });
-      d.actividad = leer().actividad;
+      d.actividad = leer().actividad; d.registros = leer().registros || [];
       guardar(d);
     }
 
@@ -124,7 +126,8 @@
         const d = leer(), respuestas = {};
         Object.keys(d.respuestas).forEach(k => respuestas[k] = Object.keys(d.respuestas[k]).length);
         return { participantes: d.participantes.length, respuestas,
-                 preguntas: d.preguntas.filter(q => !q.oculta && !q.respondida).length };
+                 preguntas: d.preguntas.filter(q => !q.oculta && !q.respondida).length,
+                 registros: (d.registros || []).length };
       },
       async preguntar(pid, texto) {
         const d = leer(); unir(d, pid);
@@ -154,7 +157,14 @@
         if (q) { if (respondida !== null) q.respondida = respondida; if (oculta !== null) q.oculta = oculta; }
         guardar(d);
       },
-      async reiniciar() { const d = vacio(); guardar(d); },
+      async reiniciar() { const r = leer().registros || []; const d = vacio(); d.registros = r; guardar(d); },   // los registros se conservan
+      async registrar(r) {
+        const d = leer(), correo = (r.correo || '').trim().toLowerCase();
+        d.registros = (d.registros || []).filter(x => x.correo !== correo);
+        d.registros.push({ nombre: r.nombre.trim(), correo, organizacion: r.organizacion.trim(), autoriza: true, creado: new Date().toISOString() });
+        guardar(d);
+      },
+      async exportarRegistros() { return leer().registros || []; },
       cargarEjemplo
     };
   }

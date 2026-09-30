@@ -14,6 +14,13 @@ window.DATOS = {
     { id: 'fin',         nombre: 'Gracias',               corto: 'Cierre' }
   ],
 
+  // Formulario de la sala de espera. Revisa el texto de autorización con la política de datos de la universidad.
+  registro: {
+    titulo: 'Cuéntanos quién eres',
+    ayuda: 'Estos datos se guardan aparte: tus respuestas en las actividades siguen siendo anónimas.',
+    autorizacion: 'Autorizo el uso de estos datos para que los organizadores me contacten sobre esta sesión y programas relacionados.'
+  },
+
   pulso: {
     pregunta: '¿En qué punto está tu organización con la IA?',
     opciones: [

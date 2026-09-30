@@ -107,7 +107,7 @@ button { cursor: pointer; }
 .campo { display: block; margin: 0 0 1.25rem; }
 .campo > span { display: block; font-weight: 600; margin-bottom: .4rem; }
 .campo small { display: block; color: var(--gris-suave); margin-top: .35rem; font-size: .85rem; }
-textarea, input[type="text"], input[type="password"] {
+textarea, input[type="text"], input[type="email"], input[type="password"] {
   width: 100%; border: 2px solid var(--linea); border-radius: 18px;
   padding: .85rem 1rem; background: var(--blanco); resize: vertical;
 }
@@ -223,6 +223,15 @@ textarea:focus, input:focus { outline: none; border-color: var(--azul); }
 }
 .brindis.visible { opacity: 1; transform: translate(-50%, 0); }
 
+/* Registro en la sala de espera */
+.registro { background: var(--niebla); border-radius: 24px; padding: 1.1rem 1.1rem 1.2rem; margin: 0 0 1.5rem; }
+.registro h2 { font-size: 1.1rem; margin: 0 0 .9rem; }
+.registro .campo { margin-bottom: .9rem; }
+.registro.hecho { padding: .9rem 1.1rem; background: var(--crema); }
+.registro.hecho p { margin: 0; }
+.check { display: flex; gap: .65rem; align-items: flex-start; font-size: .85rem; line-height: 1.4; color: var(--gris); margin: .25rem 0 1rem; cursor: pointer; }
+.check input { flex: none; width: 1.25rem; height: 1.25rem; margin: .05rem 0 0; accent-color: var(--magenta); }
+.registro .nota { font-size: .8rem; color: var(--gris-suave); margin: .75rem 0 0; }
 .espera-lista { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; gap: .5rem; }
 .espera-lista li { display: flex; gap: .75rem; align-items: center; padding: .75rem 1rem; background: var(--niebla); border-radius: var(--capsula); font-weight: 500; }
 .espera-lista li span { width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--blanco); color: var(--magenta); display: grid; place-items: center; font-size: .8rem; font-weight: 700; flex: none; }
@@ -239,6 +248,7 @@ textarea:focus, input:focus { outline: none; border-color: var(--azul); }
   #ficha .ficha-cab { border-bottom: 1.5pt solid var(--magenta); padding-bottom: 4mm; margin-bottom: 2mm; }
   #ficha h1 { font-size: 18pt; line-height: 1.2; margin: 0 0 2mm; color: var(--azul); }
   #ficha .ficha-cab p { margin: 0; color: var(--gris); }
+  #ficha .ficha-cab p.ficha-quien { margin-top: 1.5mm; color: var(--tinta); font-weight: 600; }
   #ficha h2 { font-size: 12pt; margin: 6mm 0 2mm; color: var(--magenta); break-after: avoid; }
   #ficha p, #ficha li { font-size: 10pt; line-height: 1.45; }
   #ficha ul { margin: 0; padding-left: 5mm; break-inside: avoid; }
