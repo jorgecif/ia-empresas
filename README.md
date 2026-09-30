@@ -14,6 +14,7 @@ Son dos páginas:
 | Actividad | Diapositiva | Qué ve el participante | Qué se proyecta |
 | --- | --- | --- | --- |
 | Sala de espera | Portada y agenda | Bienvenida y formulario de registro (nombre, correo, organización y autorización) | Título, QR grande y número de personas conectadas |
+| Registro | Portada y agenda | El formulario de registro a pantalla completa | Las organizaciones de quienes se registran, con cuántas personas de cada una |
 | Punto de partida | 3 · Encuesta | Cinco opciones | Barras con el porcentaje de cada etapa |
 | ¿Aislada o transformadora? | 12 · Votación A/B | Los dos casos y una razón opcional | Barra dividida A/B y las razones del grupo |
 | Ejercicio · 1. Nombre de la iniciativa | 24 · Ejercicio | Nombre y descripción opcional de su iniciativa, y botón Enviar | Instrucciones, un ejemplo y cuántas personas enviaron |
@@ -77,6 +78,7 @@ Si la dirección es larga, puedes crear un enlace corto (por ejemplo con bit.ly)
 | Hora | Actividad en vivo | Quién la lleva |
 | --- | --- | --- |
 | 5:50 p. m. | Sala de espera (compartir pantalla con el QR) | Ambos |
+| 5:55 p. m. | Registro (se ven las organizaciones que van llegando) | Ambos |
 | 6:02 p. m. | Punto de partida | Jorge |
 | 6:30 p. m. | ¿Aislada o transformadora? | Jorge |
 | 7:30 p. m. | Ejercicio, pasos 1 a 4 (un paso cada 3 a 5 minutos) | Jorge (Santiago lee el chat) |

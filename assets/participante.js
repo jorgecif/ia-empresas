@@ -85,6 +85,17 @@
     };
   }
 
+  vistas.registro = () => {
+    const r = registrado() && !editandoReg;
+    escenario.innerHTML = `
+      <p class="p-parte">Registro</p>
+      <h1 class="p-titulo">${r ? 'Tu registro está listo' : 'Regístrate'}</h1>
+      <p class="p-ayuda">${r ? 'Tu organización ya aparece en la pantalla, junto a las de los demás asistentes.'
+                             : 'Tu organización aparecerá en la pantalla, junto a las de los demás asistentes.'}</p>
+      ${htmlRegistro()}`;
+    conectarRegistro(vistas.registro);
+  };
+
   vistas.espera = () => {
     escenario.innerHTML = `
       <p class="p-parte">${esc(C.SUBTITULO || '')}</p>
@@ -440,8 +451,8 @@
     return !!mis[id];
   }
   $('#btn-actividades').onclick = () => {
-    $('#lista-act').innerHTML = `<li><button type="button" data-ir="espera"><span>Mis datos</span>
-        ${registrado() ? '<span class="listo">Enviados</span>' : ''}</button></li>` + ACTS.map(a => {
+    $('#lista-act').innerHTML = `<li><button type="button" data-ir="registro"><span>Mis datos</span>
+        ${vivo === 'registro' ? '<span class="vivo">En vivo</span>' : registrado() ? '<span class="listo">Enviados</span>' : ''}</button></li>` + ACTS.map(a => {
       const hecho = hechaActividad(a.id);
       return `<li><button type="button" data-ir="${a.id}"><span>${esc(etiqueta(a.id))}</span>
         ${a.id === vivo ? '<span class="vivo">En vivo</span>' : hecho ? '<span class="listo">Respondida</span>' : ''}</button></li>`;

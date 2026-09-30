@@ -94,6 +94,34 @@
       actualizar: () => { const c = $('#cont'); if (c) c.textContent = resumen.participantes || 0; }
     },
 
+    registro: {
+      marco: () => encabezado('registro', '¿De dónde nos acompañan?', 'Regístrate desde tu celular: tu organización aparecerá aquí.') +
+        `<div class="e-cuerpo"><div class="orgs" id="orgs"></div><div id="pie"></div></div>`,
+      datos: '__organizaciones',
+      actualizar: orgs => {
+        const personas = orgs.reduce((s, o) => s + o.personas, 0), caja = $('#orgs');
+        // El contador va primero: ocupa espacio y cambia cuántas organizaciones caben.
+        $('#pie').innerHTML = `<p class="e-cuenta">${personas} ${personas === 1 ? 'persona registrada' : 'personas registradas'} · ${orgs.length} ${orgs.length === 1 ? 'organización' : 'organizaciones'}</p>`;
+        caja.dataset.tam = orgs.length <= 8 ? 'grande' : orgs.length <= 20 ? 'media' : orgs.length > 30 ? 'chica' : '';
+        // Las más recientes primero, para que quien se acaba de registrar vea la suya.
+        caja.innerHTML = orgs.length
+          ? orgs.slice().reverse().map(o => `<span class="${nuevo('o' + o.organizacion.toLowerCase()).trim()}">${esc(o.organizacion)}${o.personas > 1 ? `<b>${o.personas}</b>` : ''}</span>`).join('') +
+            '<span class="mas" hidden></span>'
+          : '<div class="vacio">Las organizaciones aparecerán aquí a medida que la gente se registre.</div>';
+        // Si no caben todas, las más antiguas se resumen en "y N más".
+        // Se mide con offsetTop (sin la animación de entrada, que las muestra un poco más pequeñas).
+        const alto = caja.clientHeight, mas = caja.querySelector('.mas');
+        const chips = [...caja.querySelectorAll('span:not(.mas)')];
+        let ocultas = 0;
+        const sobra = el => el.offsetTop + el.offsetHeight > alto;
+        while (chips.length && sobra(chips[chips.length - 1])) { chips.pop().remove(); ocultas++; }
+        if (ocultas && mas) {
+          mas.hidden = false;
+          do { mas.textContent = `y ${ocultas} más`; } while (sobra(mas) && chips.length && (chips.pop().remove(), ++ocultas));
+        }
+      }
+    },
+
     pulso: {
       marco: () => encabezado('pulso', D.pulso.pregunta) + `<div class="e-cuerpo"><div class="barras" id="cuerpo"></div><div id="pie"></div></div>`,
       datos: 'pulso',
@@ -297,6 +325,7 @@
       const E = escenas[vivo] || escenas.espera;
       let datos = null;
       if (E.datos === '__preguntas') datos = await A.preguntas('00000000-0000-0000-0000-000000000000');
+      else if (E.datos === '__organizaciones') datos = await A.organizaciones();
       else if (E.datos) datos = await A.resultados(E.datos);
       const f = JSON.stringify(datos) + '|' + (resumen.participantes || 0);
       if (f !== firma && E.actualizar) { E.actualizar(datos || []); firma = f; }

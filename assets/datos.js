@@ -2,6 +2,7 @@
 window.DATOS = {
   actividades: [
     { id: 'espera',      nombre: 'Sala de espera',        corto: 'Espera' },
+    { id: 'registro',    nombre: 'Registro',              corto: 'Registro',     parte: 'Bienvenida' },
     { id: 'pulso',       nombre: 'Punto de partida',      corto: 'Encuesta',     parte: 'Apertura' },
     { id: 'ab',          nombre: '¿Aislada o transformadora?', corto: 'Votación A/B', parte: 'Parte 1' },
     // Ejercicio "Prioriza tu oportunidad": cada paso es una actividad que los facilitadores abren desde el presentador.
@@ -17,7 +18,7 @@ window.DATOS = {
   // Formulario de la sala de espera. Revisa el texto de autorización con la política de datos de la universidad.
   registro: {
     titulo: 'Cuéntanos quién eres',
-    ayuda: 'Los organizadores verán tus respuestas junto a estos datos. En la pantalla del grupo tus respuestas aparecen sin tu nombre. Si prefieres no registrarte, puedes participar igual.',
+    ayuda: 'Los organizadores verán tus respuestas junto a estos datos. En la pantalla del grupo solo aparece el nombre de tu organización, y tus respuestas se muestran sin tu nombre. Si prefieres no registrarte, puedes participar igual.',
     autorizacion: 'Autorizo a los organizadores a usar estos datos y mis respuestas en las actividades para analizar los resultados de la sesión y contactarme sobre esta sesión y programas relacionados.'
   },
 

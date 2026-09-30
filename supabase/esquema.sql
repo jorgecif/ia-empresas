@@ -354,6 +354,21 @@ begin
 end;
 $$;
 
+-- Organizaciones de las personas registradas, para la pantalla del grupo (sin nombres ni correos).
+create or replace function public.organizaciones()
+returns table (organizacion text, personas int)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select mode() within group (order by btrim(r.organizacion)) as organizacion, count(*)::int as personas
+  from public.registros r
+  group by lower(btrim(r.organizacion))
+  order by min(r.creado)
+  limit 200;
+$$;
+
 -- Lista de registros para descargar (uno por correo). Solo con la clave del facilitador.
 create or replace function public.exportar_registros(p_clave text)
 returns table (nombre text, correo text, organizacion text, autoriza boolean, creado timestamptz)
@@ -442,6 +457,7 @@ grant execute on function public.reiniciar_sesion(text)              to anon, au
 grant execute on function public.registrar(uuid, text, text, text, boolean) to anon, authenticated;
 grant execute on function public.exportar_registros(text)            to anon, authenticated;
 grant execute on function public.exportar_resultados(text)           to anon, authenticated;
+grant execute on function public.organizaciones()                    to anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- Clave del facilitador

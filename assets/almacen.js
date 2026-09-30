@@ -58,7 +58,8 @@
       reiniciar: clave => rpc('reiniciar_sesion', { p_clave: clave }),
       registrar: (pid, r) => rpc('registrar', { p_participante: pid, p_nombre: r.nombre, p_correo: r.correo, p_organizacion: r.organizacion, p_autoriza: r.autoriza }),
       async exportarRegistros(clave) { return await rpc('exportar_registros', { p_clave: clave }) || []; },
-      exportarResultados: clave => rpc('exportar_resultados', { p_clave: clave })
+      exportarResultados: clave => rpc('exportar_resultados', { p_clave: clave }),
+      async organizaciones() { return await rpc('organizaciones') || []; }
     };
   }
 
@@ -179,6 +180,15 @@
       async exportarRegistros() {   // uno por correo, como en Supabase
         const porCorreo = new Map(); (leer().registros || []).forEach(x => porCorreo.set(x.correo, x));
         return [...porCorreo.values()];
+      },
+      async organizaciones() {   // agrupadas sin distinguir mayúsculas, en orden de llegada
+        const grupos = new Map();
+        (leer().registros || []).forEach(r => {
+          const k = r.organizacion.trim().toLowerCase();
+          if (!grupos.has(k)) grupos.set(k, { organizacion: r.organizacion.trim(), personas: 0 });
+          grupos.get(k).personas++;
+        });
+        return [...grupos.values()];
       },
       async exportarResultados() {
         const d = leer();

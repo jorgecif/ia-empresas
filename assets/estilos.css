@@ -341,6 +341,21 @@ textarea:focus, input:focus { outline: none; border-color: var(--azul); }
 .mz-punto.nuevo { animation: none; }
 @keyframes entra { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
 
+/* Registro: organizaciones de los asistentes */
+.orgs { position: relative; flex: 1; min-height: 0; overflow: hidden; margin-bottom: max(4rem, 8vh);   /* deja libre la esquina del QR */
+        display: flex; flex-wrap: wrap; align-content: flex-start; gap: 1.4vh 1vw; max-width: 1300px; }
+.orgs span { display: inline-flex; align-items: center; gap: .55em; padding: .55em 1.15em; border-radius: var(--capsula); background: var(--niebla); color: var(--azul); font-weight: 600; font-size: clamp(1rem, 1.55vw, 1.7rem); line-height: 1.2; }
+.orgs span:nth-child(3n+2) { background: var(--rubor); color: #8f1d58; }
+.orgs span:nth-child(3n) { background: var(--crema); color: var(--tinta); }
+.orgs span b { display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; padding: 0 .35em; border-radius: var(--capsula); background: var(--azul); color: var(--blanco); font-size: .72em; }
+.orgs span.mas { background: none; color: var(--gris); }
+.orgs[data-tam="grande"] { gap: 2.2vh 1.4vw; }
+.orgs[data-tam="grande"] span { font-size: clamp(1.4rem, 2.5vw, 2.8rem); }
+.orgs[data-tam="media"] span { font-size: clamp(1.15rem, 1.9vw, 2.1rem); }
+.orgs[data-tam="chica"] { gap: 1vh .7vw; }
+.orgs[data-tam="chica"] span { font-size: clamp(.85rem, 1.2vw, 1.35rem); padding: .45em .95em; }
+.orgs span.nuevo { animation: entra .5s ease; }
+
 /* Ejercicio por pasos */
 .ej-pasos { list-style: none; margin: 0 0 4vh; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; max-width: 1300px; }
 .ej-pasos li { display: flex; align-items: center; gap: .7rem; padding: .6rem 1rem .6rem .6rem; border-radius: var(--capsula); background: var(--niebla); color: var(--gris); font-weight: 600; font-size: clamp(.8rem, 1.05vw, 1.1rem); line-height: 1.2; }
