@@ -239,11 +239,15 @@ textarea:focus, input:focus { outline: none; border-color: var(--azul); }
 /* Ficha para imprimir */
 #ficha { display: none; }
 @media print {
-  @page { margin: 14mm 16mm; }
+  /* Los márgenes van en la ficha y no en @page: así salen aunque el diálogo de impresión
+     esté en "Márgenes: ninguno". Con margen 0 el navegador tampoco agrega fecha ni URL. */
+  @page { margin: 0; }
   /* Se quita todo lo demás (no solo se oculta), para que no queden páginas en blanco. */
   body { display: block !important; min-height: 0 !important; }
   body > :not(#ficha) { display: none !important; }
-  #ficha { display: block !important; color: var(--tinta); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #ficha { display: block !important; padding: 18mm 20mm; color: var(--tinta);
+           -webkit-box-decoration-break: clone; box-decoration-break: clone;
+           -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   #ficha .ficha-logo { display: block; height: 16mm; width: auto; margin: 0 0 6mm; }
   #ficha .ficha-cab { border-bottom: 1.5pt solid var(--magenta); padding-bottom: 4mm; margin-bottom: 2mm; }
   #ficha h1 { font-size: 18pt; line-height: 1.2; margin: 0 0 2mm; color: var(--azul); }
