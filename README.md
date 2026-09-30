@@ -98,6 +98,7 @@ Los colores y la tipografía siguen la plantilla de la universidad y están al i
 ## Seguridad y privacidad
 
 - **Registro separado de las respuestas.** En la sala de espera se piden nombre, correo y organización, con una casilla de autorización (el texto está en `assets/datos.js`; revísalo con la política de datos de la universidad). Esos datos se guardan en una tabla aparte, **sin** el identificador del celular, así que no se pueden cruzar con las respuestas. Quien llegue tarde puede registrarse desde "Actividades → Mis datos", y quien no lo haya hecho lo ve de nuevo en "Gracias".
+- **Descargar resultados** (en el presentador, sin clave) baja un Excel con una hoja de resumen y una hoja por actividad: votación A/B con razones, preparación por persona, iniciativas y su cuadrante, compromisos y preguntas. Los resultados son anónimos y no incluyen los registros.
 - **Solo los facilitadores descargan los registros**, con el botón **Descargar registros** del presentador (pide la clave). Sale un CSV listo para Excel.
 - Cada celular recibe un identificador aleatorio que solo sirve para no contar dos veces la misma respuesta.
 - **Qué se publica en la pantalla:** los porcentajes, las razones de la votación A/B, el nombre de la oportunidad y su ubicación en la matriz, el promedio del grupo por capacidad y los siguientes pasos. La descripción de la iniciativa nunca sale del celular.
@@ -132,6 +133,7 @@ assets/participante.js  Lógica del celular
 assets/presentador.js   Lógica de la pantalla del presentador
 assets/estilos.css      Estilos compartidos
 assets/qrcode.js        Generador de QR (Kazuhiko Arase, licencia MIT)
+assets/excel.js         Genera el Excel de resultados, sin librerías externas
 assets/logo-*.png       Logos de la plantilla de la universidad
 supabase/esquema.sql    Tablas, funciones y permisos de la base de datos
 ```

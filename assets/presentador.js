@@ -308,6 +308,53 @@
     if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
     else document.exitFullscreen();
   }
+  // Resultados de todas las actividades en un Excel: una hoja de resumen y una por actividad.
+  // Son anónimos y ya son visibles en las pantallas, así que no piden la clave.
+  $('#btn-resultados').onclick = async () => {
+    const boton = $('#btn-resultados'); boton.disabled = true;
+    try {
+      const [pulso, ab, cap, mz, paso, preguntas, res] = await Promise.all([
+        A.resultados('pulso'), A.resultados('ab'), A.resultados('capacidades'), A.resultados('matriz'), A.resultados('paso'),
+        A.preguntas('00000000-0000-0000-0000-000000000000'), A.resumen()]);
+      const n = v => ({ v, s: 1 }), pct = (a, t) => ({ v: t ? a / t : 0, s: 2 }), dec = v => ({ v: +(+v || 0).toFixed(2), s: 3 });
+      const prom = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+      const K = D.capacidades.items, Q = D.matriz.cuadrantes;
+      const votosA = ab.filter(x => x.opcion === 'A').length;
+      const promCap = K.map(it => prom(cap.map(x => (x.calificaciones || {})[it.id]).filter(Boolean)));
+
+      const resumen = [
+        [n(C.TITULO)], [C.SUBTITULO || ''], ['Descargado el', new Date().toLocaleString('es-CO')], [],
+        [n('Participación'), n('Personas')], ['Participantes', res.participantes || 0], ['Registrados', res.registros || 0], [],
+        [n('Punto de partida'), n('Respuestas'), n('Porcentaje')],
+        ...D.pulso.opciones.map(o => { const c = pulso.filter(x => x.opcion === o.id).length; return [o.titulo, c, pct(c, pulso.length)]; }),
+        ['Total', pulso.length], [],
+        [n('¿Aislada o transformadora?'), n('Votos'), n('Porcentaje')],
+        ['Opción A', votosA, pct(votosA, ab.length)], ['Opción B', ab.length - votosA, pct(ab.length - votosA, ab.length)], ['Total', ab.length], [],
+        [n('Preparación de la organización'), n('Promedio (1 a 5)')],
+        ...K.map((it, i) => [it.titulo, dec(promCap[i])]), ['Promedio general', dec(prom(cap.map(x => x.promedio || 0)))], ['Personas', cap.length], [],
+        [n('Resultados del ejercicio'), n('Iniciativas')],
+        ...Object.keys(Q).map(k => [Q[k].nombre, mz.filter(x => U.cuadrante(x.impacto, x.preparacion) === k).length]), ['Total', mz.length], [],
+        [n('Cierre'), n('Cantidad')], ['Compromisos (siguiente paso)', paso.length], ['Preguntas del público', preguntas.length]
+      ];
+      const hojas = [
+        { nombre: 'Resumen', anchos: [42, 14, 14], filas: resumen },
+        { nombre: 'Votación A-B', anchos: [8, 90], filas: [[n('Voto'), n('Razón')], ...ab.map(x => [x.opcion, x.razon || ''])] },
+        { nombre: 'Preparación', anchos: [6, ...K.map(() => 16), 12],
+          filas: [[n('#'), ...K.map(it => n(it.titulo)), n('Promedio')],
+                  ...cap.map((x, i) => [i + 1, ...K.map(it => (x.calificaciones || {})[it.id]), dec(x.promedio)]),
+                  [n('Grupo'), ...promCap.map(dec), dec(prom(cap.map(x => x.promedio || 0)))]] },
+        { nombre: 'Iniciativas', anchos: [50, 16, 18, 24],
+          filas: [[n('Iniciativa'), n('Impacto (1 a 5)'), n('Preparación (1 a 5)'), n('Cuadrante')],
+                  ...mz.map(x => [x.oportunidad, dec(x.impacto), dec(x.preparacion), (Q[U.cuadrante(x.impacto, x.preparacion)] || {}).nombre || ''])] },
+        { nombre: 'Siguiente paso', anchos: [100], filas: [[n('Compromiso')], ...paso.map(x => [x.texto])] },
+        { nombre: 'Preguntas', anchos: [90, 8, 12],
+          filas: [[n('Pregunta'), n('Votos'), n('Respondida')], ...preguntas.map(q => [q.texto, q.votos, q.respondida ? 'Sí' : 'No'])] }
+      ];
+      EXCEL.descargar(EXCEL.libro(hojas), `resultados-ia-empresas-${new Date().toLocaleDateString('sv-SE')}.xlsx`);
+    } catch (e) { alert('No se pudieron descargar los resultados: ' + e.message); }
+    finally { boton.disabled = false; }
+  };
+
   // Registros (nombre, correo, organización) en CSV para Excel en español: separador ";" y BOM UTF-8.
   $('#btn-registros').onclick = () => conClave(async k => {
     const filas = await A.exportarRegistros(k);
