@@ -98,14 +98,13 @@ Los colores y la tipografía siguen la plantilla de la universidad y están al i
 ## Seguridad y privacidad
 
 - **Registro asociado a las respuestas.** En la sala de espera se piden nombre, correo y organización, con una casilla de autorización que dice que los organizadores verán las respuestas junto a esos datos (el texto está en `assets/datos.js`; revísalo con la política de datos de la universidad). El registro es opcional: quien no se registra participa igual y sus respuestas quedan anónimas. En la pantalla del grupo nunca aparecen nombres. Quien llegue tarde puede registrarse desde "Actividades → Mis datos", y quien no lo haya hecho lo ve de nuevo en "Gracias".
-- **Descargar resultados** (en el presentador, pide la clave) baja un Excel con una hoja de resumen, una hoja *Por persona* con todas las respuestas de cada quien y una hoja por actividad, todas con nombre, correo y organización de quien se registró ("Sin registro" si no lo hizo).
-- **Solo los facilitadores descargan los registros**, con el botón **Descargar registros** del presentador (pide la clave). Sale un CSV listo para Excel.
+- **Descargar resultados** (en el presentador, pide la clave) baja un Excel con una hoja de resumen, una hoja *Por persona* con todas las respuestas de cada quien, una hoja por actividad (todas con nombre, correo y organización de quien se registró, o "Sin registro") y una hoja *Registros* con todas las personas registradas.
 - Cada celular recibe un identificador aleatorio que solo sirve para no contar dos veces la misma respuesta.
 - **Qué se publica en la pantalla:** los porcentajes, las razones de la votación A/B, el nombre de la oportunidad y su ubicación en la matriz, el promedio del grupo por capacidad y los siguientes pasos. La descripción de la iniciativa nunca sale del celular.
 - **La clave del facilitador** se guarda cifrada en la base de datos y se necesita para cambiar la actividad, marcar preguntas y borrar respuestas.
 - **Las tablas no se pueden leer ni modificar directamente.** Todo pasa por funciones que validan los datos y limitan su tamaño.
 - Cualquier persona con el enlace puede responder. Para una sesión con inscripción previa es suficiente, pero no uses estas herramientas para recoger información sensible.
-- Después de la sesión, descarga los registros y pulsa **Borrar respuestas**. Ese botón **no** borra los registros; para borrarlos, ejecuta `delete from public.registros;` en el SQL Editor o elimina el proyecto de Supabase si ya no lo necesitas.
+- Después de la sesión, descarga los resultados y pulsa **Borrar respuestas**. Ese botón **no** borra los registros; para borrarlos, ejecuta `delete from public.registros;` en el SQL Editor o elimina el proyecto de Supabase si ya no lo necesitas.
 
 ## Costos y límites
 

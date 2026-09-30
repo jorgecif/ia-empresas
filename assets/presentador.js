@@ -309,19 +309,17 @@
     else document.exitFullscreen();
   }
   // ------------------------------------------------------------ descargas (solo con la clave)
-  // Descarga el archivo y deja un enlace visible por si el navegador bloqueó la descarga automática.
-  function ofrecerDescarga(blob, nombre) {
-    const a = $('#enlace-descarga');
-    if (a.getAttribute('href')) URL.revokeObjectURL(a.href);
+  function descargar(blob, nombre) {
+    const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = nombre;
-    a.textContent = 'Guardar ' + nombre; a.hidden = false;
-    a.click();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
   }
   const hoy = () => new Date().toLocaleDateString('sv-SE');
 
   // Resultados de todas las actividades en un Excel, con el nombre, correo y organización de quien
   // se registró. Por eso pide la clave del facilitador.
-  function hojasResultados(d) {
+  function hojasResultados(d, registros) {
     const n = v => ({ v, s: 1 }), pct = (a, t) => ({ v: t ? a / t : 0, s: 2 });
     const dec = v => (v == null || v === '' || isNaN(+v) ? '' : { v: +(+v).toFixed(2), s: 3 });
     const prom = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
@@ -382,6 +380,9 @@
         filas: [[...QUIEN, n('Iniciativa'), n('Impacto (1 a 5)'), n('Preparación (1 a 5)'), n('Cuadrante')],
                 ...mz.map(r => [...quien(r.participante), r.datos.oportunidad, dec(r.datos.impacto), dec(r.datos.preparacion), cuadrante(r.datos)])] },
       { nombre: 'Siguiente paso', anchos: [...A3, 90], filas: [[...QUIEN, n('Compromiso')], ...paso.map(r => [...quien(r.participante), r.datos.texto])] },
+      { nombre: 'Registros', anchos: [...A3, 18, 22],
+        filas: [[...QUIEN, n('Autoriza contacto'), n('Fecha de registro')],
+                ...registros.map(r => [r.nombre, r.correo, r.organizacion, r.autoriza ? 'Sí' : 'No', new Date(r.creado).toLocaleString('es-CO')])] },
       { nombre: 'Preguntas', anchos: [...A3, 80, 8, 12, 10],
         filas: [[...QUIEN, n('Pregunta'), n('Votos'), n('Respondida'), n('Oculta')],
                 ...preguntas.map(q => [...quien(q.participante), q.texto, q.votos, q.respondida ? 'Sí' : 'No', q.oculta ? 'Sí' : 'No'])] }
@@ -389,21 +390,13 @@
   }
   $('#btn-resultados').onclick = () => conClave(async k => {
     const boton = $('#btn-resultados'); boton.disabled = true;
-    try { ofrecerDescarga(EXCEL.libro(hojasResultados(await A.exportarResultados(k))), `resultados-ia-empresas-${hoy()}.xlsx`); }
+    try {
+      const [d, registros] = await Promise.all([A.exportarResultados(k), A.exportarRegistros(k)]);
+      descargar(EXCEL.libro(hojasResultados(d, registros)), `resultados-ia-empresas-${hoy()}.xlsx`);
+    }
     finally { boton.disabled = false; }
   });
 
-  // Registros (nombre, correo, organización) en CSV para Excel en español: separador ";" y BOM UTF-8.
-  $('#btn-registros').onclick = () => conClave(async k => {
-    const filas = await A.exportarRegistros(k);
-    if (!filas.length) { alert('Aún no hay registros.'); return; }
-    // Evita que Excel interprete como fórmula un valor que empiece por = + - @
-    const campo = v => '"' + String(v == null ? '' : v).replace(/^([=+\-@])/, "'$1").replace(/"/g, '""') + '"';
-    const lineas = [['Nombre', 'Correo', 'Organización', 'Autoriza contacto', 'Fecha'].map(campo).join(';')]
-      .concat(filas.map(f => [f.nombre, f.correo, f.organizacion, f.autoriza ? 'Sí' : 'No',
-        new Date(f.creado).toLocaleString('es-CO')].map(campo).join(';')));
-    ofrecerDescarga(new Blob(['\ufeff' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' }), `registros-ia-empresas-${hoy()}.csv`);
-  });
   $('#btn-reiniciar').onclick = () => {
     if (!confirm('Esto borra todas las respuestas, preguntas y participantes, y vuelve a la sala de espera. Los registros (nombre, correo, organización) se conservan. ¿Continuar?')) return;
     conClave(async k => { await A.reiniciar(k); await refrescar('redibujar'); });
